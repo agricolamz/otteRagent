@@ -11,6 +11,7 @@
 #' @importFrom logger log_debug
 #' @importFrom logger log_info
 #' @importFrom logger log_error
+#' @importFrom logger log_warn
 #' @importFrom readr read_csv
 #' @importFrom dplyr mutate
 #' @importFrom dplyr filter
@@ -108,7 +109,7 @@ run_task <- function(task,
                          message = str_glue("Я не нашел умения {skill} для задачи {task} и поменял ее статус на `ignore`."),
                          log_message = "Отправляю письмо на gmail с сообщением об ошибке")
     } else {
-      logger::log_warning("🦦  Интернета нет, так что я не сообщил о проблеме")
+      logger::log_warn("🦦  Интернета нет, так что я не сообщил о проблеме")
       logger::log_info("🦦  Добавляю отправку письма с сообщением о проблеме в список задач")
       add_to_backlog(task = "Отправить письмо о проблеме",
                      skill = "sent_gmail_message",

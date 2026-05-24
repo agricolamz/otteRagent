@@ -10,7 +10,7 @@ Authors@R: c(
     )
   )
 Description: Personal package for the rule based agent and its skills.
-License: GPL-2
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Config/roxygen2/version: 8.0.0
