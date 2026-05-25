@@ -3,7 +3,7 @@
 export(add_to_backlog)
 export(ask_ollama)
 export(print_logs)
-export(remind)
+export(remind_me)
 export(run_task)
 export(sent_gmail_message)
 importFrom(curl,has_internet)

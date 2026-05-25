@@ -16,12 +16,12 @@
 #'
 #' @export
 
-remind <- function(at,
-                   tz = Sys.timezone(),
-                   message,
-                   subject = "автоматическое напоминание",
-                   to = getOption("otteRagent_preferred_out_mail"),
-                   log_message = "Высылаю автоматическое напоминание"){
+remind_me <- function(at,
+                      tz = Sys.timezone(),
+                      message,
+                      subject = "автоматическое напоминание",
+                      to = getOption("otteRagent_preferred_out_mail"),
+                      log_message = "Высылаю автоматическое напоминание"){
 
   logger::log_debug("🦦  Запуск умения `remind`")
 
