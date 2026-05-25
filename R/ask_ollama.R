@@ -15,12 +15,12 @@
 #'
 #' @export
 
-ollama_call <- function(ollama_model = "gemma4:26b",
-                        ollama_message,
-                        log_message = "Делаю запрос модели Ollama",
-                        path_to_tasks = getOption("otteRagent_path_to_tasks")){
+ask_ollama <- function(ollama_model = "gemma4:26b",
+                       ollama_message,
+                       log_message = "Делаю запрос модели Ollama",
+                       path_to_tasks = getOption("otteRagent_path_to_tasks")){
 
-  logger::log_debug("🦦  Запуск умения `ollama_call`")
+  logger::log_debug("🦦  Запуск умения `ask_ollama`")
 
   # проверка параметров -----------------------------------------------------
 
@@ -86,5 +86,5 @@ ollama_call <- function(ollama_model = "gemma4:26b",
                    path_to_tasks = path_to_tasks)
   }
 
-  logger::log_debug("🦦  Завершение запуска умения `ollama_call`")
+  logger::log_debug("🦦  Завершение запуска умения `ask_ollama`")
 }

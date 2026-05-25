@@ -3,6 +3,10 @@
 #' @param log_message message for adding to logs
 #'
 #' @importFrom readr read_lines
+#' @importFrom logger log_debug
+#' @importFrom logger log_error
+#' @importFrom logger log_info
+#'
 #'
 #' @export
 
