@@ -3,8 +3,7 @@
 #' @param from mail address to get the tasks from
 #' @param log_message message for adding to logs
 
-
-gather_tasks <- function(to = getOption("otteRagent_preferred_in_mail"),
+gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
                          log_message = "Отправляю письмо на gmail"){
 
   logger::log_debug("🦦  Запуск умения `gather_tasks`")
@@ -25,6 +24,8 @@ gather_tasks <- function(to = getOption("otteRagent_preferred_in_mail"),
     stop()
   }
 
+  # вызов функции -----------------------------------------------------------
+  logger::log_info("🦦  {log_message}")
 
   my_threads <- gmailr::gm_threads(search = "is:unread")
   prefered_in_mail_cleaned <-  stringr::str_c("<", stringr::str_remove(from, "\\+.*(?=@)"), ">")
@@ -45,7 +46,7 @@ gather_tasks <- function(to = getOption("otteRagent_preferred_in_mail"),
     result
 
   result$thread_id |>
-    map(function(thread_id){
+    purrr::map(function(thread_id){
 
       thread <- gmailr::gm_thread(thread_id)
 
@@ -54,14 +55,13 @@ gather_tasks <- function(to = getOption("otteRagent_preferred_in_mail"),
         yaml::yaml.load() ->
         task_params
 
-      tibble(subject = gm_subject(thread$messages[[1]]))
+      "skill: ask_ollama\r\nparams:\r\n  - ollama_message: Какого цвета дуб?\r\n" |>
+        unlist() |>
+        yaml::yaml.load() ->
+        task_params
 
-      if(!exists(task_params$schedule)){
+      if(is.null(task_params$schedule)){
         task_params$schedule <- "once"
-      }
-
-      if(!exists(task_params$params)){
-        task_params$schedule <- NA
       }
 
       add_to_backlog(task = gm_subject(thread$messages[[1]]),
