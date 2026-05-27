@@ -17,7 +17,7 @@
 #' @importFrom dplyr filter
 #' @importFrom readr write_csv
 #' @importFrom stringr str_glue
-#' @importFrom yaml read_yaml
+#' @importFrom yaml yaml.load
 #' @importFrom curl has_internet
 #'
 #' @export
@@ -125,11 +125,18 @@ run_task <- function(task,
 
   logger::log_info("🦦  {log_message}")
 
+  if(is.na(params)){
+    params <- list()
+  }
+
   if(!is.list(params)){
     params |>
-      yaml::read_yaml(text = _) ->
+      yaml::yaml.load() ->
       params
   }
+
+  logger::log_debug("Имена `params`: {names(params)}")
+  logger::log_debug("Содержание `params`: {params}")
 
   do.call(what = skill, args = params)
 

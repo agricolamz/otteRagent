@@ -25,7 +25,7 @@ add_to_backlog <- function(task = "новое задание",
                            skill,
                            schedule = "once",
                            ignore = NA,
-                           params = NA,
+                           params = list(),
                            path_to_tasks = getOption("otteRagent_path_to_tasks"),
                            immediate_execute = FALSE,
                            log_message = "Добавляю задание в список задач"){
@@ -139,7 +139,7 @@ add_to_backlog <- function(task = "новое задание",
     run_task(task = task,
              skill = skill,
              schedule = "",
-             params = params |> yaml::as.yaml(),
+             params = params,
              task_id = new_id)
   }
 

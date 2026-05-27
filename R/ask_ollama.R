@@ -47,6 +47,13 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
     stop()
   }
 
+  if(nchar(ollama_message) > 0){
+    logger::log_debug("🦙  в параметре `ollama_message` есть текст")
+  } else {
+    logger::log_error("🦙  не заполнен параметр `ollama_message`")
+    stop()
+  }
+
   if(ollamar::test_connection(logical = TRUE)){
     logger::log_debug("🦙  Ollama запущена")
   } else {

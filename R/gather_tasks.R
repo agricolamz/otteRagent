@@ -2,13 +2,44 @@
 #'
 #' @param from mail address to get the tasks from
 #' @param log_message message for adding to logs
+#'
+#' @importFrom logger log_debug
+#' @importFrom logger log_error
+#' @importFrom logger log_info
+#' @importFrom dplyr filter
+#' @importFrom stringr str_c
+#' @importFrom stringr str_remove
+#' @importFrom stringr str_replace
+#' @importFrom stringr str_detect
+#' @importFrom purrr map
+#' @importFrom purrr list_rbind
+#' @importFrom purrr map_lgl
+#' @importFrom gmailr gm_threads
+#' @importFrom gmailr gm_modify_thread
+#' @importFrom gmailr gm_thread
+#' @importFrom gmailr gm_id
+#' @importFrom gmailr gm_body
+#' @importFrom gmailr gm_from
+#' @importFrom gmailr gm_to
+#' @importFrom gmailr gm_subject
+#' @importFrom tibble tibble
+#' @importFrom yaml yaml.load
 
 gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
-                         log_message = "Отправляю письмо на gmail"){
+                         log_message = "Собираю задания из gmail"){
 
   logger::log_debug("🦦  Запуск умения `gather_tasks`")
 
   # проверка параметров -----------------------------------------------------
+
+  skills <- c("add_to_backlog")
+
+  if(sum(skills |> purrr::map_lgl(exists)) == length(skills)){
+    logger::log_debug("🦦  Все необходимые умения есть.")
+  } else {
+    logger::log_error("🦦  Один из следующих умений не установлен: {skills}")
+    stop()
+  }
 
   if(exists("from")){
     logger::log_debug("🦦  параметр `from` есть")
@@ -55,20 +86,18 @@ gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
         yaml::yaml.load() ->
         task_params
 
-      "skill: ask_ollama\r\nparams:\r\n  - ollama_message: Какого цвета дуб?\r\n" |>
-        unlist() |>
-        yaml::yaml.load() ->
-        task_params
-
       if(is.null(task_params$schedule)){
         task_params$schedule <- "once"
       }
 
-      add_to_backlog(task = gm_subject(thread$messages[[1]]),
+      add_to_backlog(task = gmailr::gm_subject(thread$messages[[1]]),
                      skill = task_params$skill,
                      schedule = task_params$schedule,
-                     params = task_params$params,
+                     params = task_params$params[[1]],
                      immediate_execute = TRUE)
+
+      gmailr::gm_modify_thread(id = thread_id,
+                               remove_labels = "UNREAD")
     })
 
   logger::log_debug("🦦  Завершение запуска умения `gather_tasks`")

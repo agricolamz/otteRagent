@@ -6,7 +6,7 @@
 \usage{
 gather_tasks(
   from = getOption("otteRagent_preferred_to_mail"),
-  log_message = "Отправляю письмо на gmail"
+  log_message = "Собираю задания из gmail"
 )
 }
 \arguments{

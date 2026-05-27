@@ -9,7 +9,7 @@ add_to_backlog(
   skill,
   schedule = "once",
   ignore = NA,
-  params = NA,
+  params = list(),
   path_to_tasks = getOption("otteRagent_path_to_tasks"),
   immediate_execute = FALSE,
   log_message = "Добавляю задание в список задач"
