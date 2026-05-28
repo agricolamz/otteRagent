@@ -15,7 +15,7 @@ remind_me(
 )
 }
 \arguments{
-\item{at}{time in the format `yyyy-mm-dd hh:mm`}
+\item{at}{time in the format `yyyy-mm-dd hh:mm`, other possible value is `now`.}
 
 \item{tz}{time zone. By default gathered from the system.}
 
