@@ -15,7 +15,7 @@
 #' @importFrom purrr list_rbind
 #' @importFrom purrr map_lgl
 #' @importFrom gmailr gm_threads
-#' @importFrom gmailr gm_modify_thread
+#' @importFrom gmailr gm_trash_message
 #' @importFrom gmailr gm_thread
 #' @importFrom gmailr gm_id
 #' @importFrom gmailr gm_body
@@ -96,7 +96,7 @@ gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
                      params = task_params$params[[1]],
                      immediate_execute = TRUE)
 
-      gmailr::gm_modify_thread(id = thread_id,
+      gmailr::gm_trash_message(id = thread_id,
                                remove_labels = "UNREAD")
     })
 

@@ -1,6 +1,6 @@
 #' Remind via `gmail`
 #'
-#' @param at time in the format `yyyy-mm-dd hh:mm`
+#' @param at time in the format `yyyy-mm-dd hh:mm`, other possible value is `now`.
 #' @param tz time zone. By default gathered from the system.
 #' @param message message for sending
 #' @param subject subject of the mail
@@ -43,17 +43,17 @@ remind_me <- function(at,
     stop()
   }
 
-  if(lubridate::ymd_hm(at, quiet = TRUE) |> is.na()){
-    logger::log_error("🔔  параметр `at` отличается от формата ymdhm")
+  if(lubridate::ymd_hm(at, quiet = TRUE) |> is.na() | at == "now"){
+    logger::log_error("🔔  параметр `at` отличается от формата ymdhm; еще возможное значение --- `now`")
     stop()
   } else {
     logger::log_debug("🔔  параметр `at` парсится как дата")
   }
 
-  if(exists("at")){
-    logger::log_debug("🔔  параметр `at` есть")
+  if(exists("tz")){
+    logger::log_debug("🔔  параметр `tz` есть")
   } else {
-    logger::log_error("🔔  не заполнен параметр `at`")
+    logger::log_error("🔔  не заполнен параметр `tz`")
     stop()
   }
 
@@ -89,7 +89,13 @@ remind_me <- function(at,
 
   logger::log_info("🔔  {log_message}")
 
-  if(lubridate::now() < lubridate::ymd_hm(at, quiet = TRUE, tz = tz)){
+  if(at == "now"){
+    time_for_comparison <- lubridate::now(tz = tz)
+  } else {
+    time_for_comparison <- lubridate::ymd_hm(at, quiet = TRUE, tz = tz)
+  }
+
+  if(lubridate::now(tz = tz) <= time_for_comparison){
     add_to_backlog(task = "Прислать напоминание",
                    skill = "remind",
                    schedule = "once",

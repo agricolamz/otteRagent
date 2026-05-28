@@ -28,6 +28,8 @@ add_to_backlog <- function(task = "новое задание",
                            params = list(),
                            path_to_tasks = getOption("otteRagent_path_to_tasks"),
                            immediate_execute = FALSE,
+                           at = "now",
+                           tz = Sys.timezone(),
                            log_message = "Добавляю задание в список задач"){
 
   logger::log_debug("🦦  Запуск умения `add_to_backlog`")
@@ -66,6 +68,27 @@ add_to_backlog <- function(task = "новое задание",
     logger::log_debug("🦦  параметр `params` есть")
   } else {
     logger::log_error("🦦  не заполнен параметр `params`")
+    stop()
+  }
+
+  if(exists("at")){
+    logger::log_debug("🔔  параметр `at` есть")
+  } else {
+    logger::log_error("🔔  не заполнен параметр `at`")
+    stop()
+  }
+
+  if(lubridate::ymd_hm(at, quiet = TRUE) |> is.na() | at == "now"){
+    logger::log_error("🔔  параметр `at` отличается от формата ymdhm; еще возможное значение --- `now`")
+    stop()
+  } else {
+    logger::log_debug("🔔  параметр `at` парсится как дата")
+  }
+
+  if(exists("tz")){
+    logger::log_debug("🔔  параметр `tz` есть")
+  } else {
+    logger::log_error("🔔  не заполнен параметр `tz`")
     stop()
   }
 
@@ -118,32 +141,22 @@ add_to_backlog <- function(task = "новое задание",
 
   logger::log_info("🦦  {log_message}")
 
-  path_to_tasks |>
-    readr::read_csv(show_col_types = FALSE,
-                    progress = FALSE,
-                    col_types = list(
-                      id = "d",
-                      task = "c",
-                      skill = "c",
-                      schedule = "c",
-                      ignore = "c",
-                      params = "c")) |>
-    dplyr::pull(id) |>
-    as.double() |>
-    sum() ->
-    new_id
-
-  new_id <- new_id + 1
-
-  if(immediate_execute){
-    run_task(task = task,
-             skill = skill,
-             schedule = "",
-             params = params,
-             task_id = new_id)
+  if(at == "now"){
+    time_for_comparison <- lubridate::now(tz = tz)
+  } else {
+    time_for_comparison <- lubridate::ymd_hm(at, quiet = TRUE, tz = tz)
   }
 
-  if ((isTRUE(immediate_execute) & schedule != "once") | isFALSE(immediate_execute)){
+  if(lubridate::now(tz = tz) <= time_for_comparison){
+    add_to_backlog(task = task,
+                   skill = skill,
+                   schedule = schedule,
+                   ignore = ignore,
+                   at = at,
+                   tz = tz,
+                   params = params)
+  } else {
+
     path_to_tasks |>
       readr::read_csv(show_col_types = FALSE,
                       progress = FALSE,
@@ -154,14 +167,41 @@ add_to_backlog <- function(task = "новое задание",
                         schedule = "c",
                         ignore = "c",
                         params = "c")) |>
-      dplyr::bind_rows(
-        tibble::tibble(id = new_id,
-                       task = task,
-                       skill = skill,
-                       schedule = schedule,
-                       ignore = ignore,
-                       params = params |> yaml::as.yaml())) |>
-      readr::write_csv(file = path_to_tasks, na = "")
+      dplyr::pull(id) |>
+      as.double() |>
+      sum() ->
+      new_id
+
+    new_id <- new_id + 1
+
+    if(immediate_execute){
+      run_task(task = task,
+               skill = skill,
+               schedule = "",
+               params = params,
+               task_id = new_id)
+    }
+
+    if ((isTRUE(immediate_execute) & schedule != "once") | isFALSE(immediate_execute)){
+      path_to_tasks |>
+        readr::read_csv(show_col_types = FALSE,
+                        progress = FALSE,
+                        col_types = list(
+                          id = "d",
+                          task = "c",
+                          skill = "c",
+                          schedule = "c",
+                          ignore = "c",
+                          params = "c")) |>
+        dplyr::bind_rows(
+          tibble::tibble(id = new_id,
+                         task = task,
+                         skill = skill,
+                         schedule = schedule,
+                         ignore = ignore,
+                         params = params |> yaml::as.yaml())) |>
+        readr::write_csv(file = path_to_tasks, na = "")
+    }
   }
 
   logger::log_debug("🦦  Завершение запуска умения `add_to_backlog`")
