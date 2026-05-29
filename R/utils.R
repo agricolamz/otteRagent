@@ -1,5 +1,7 @@
-gm_modify_thread_fixed <- function (id, add_labels = character(0), remove_labels = character(0),
-                              user_id = "me") {
+gm_modify_thread_fixed <- function (id,
+                                    add_labels = character(0),
+                                    remove_labels = character(0),
+                                    user_id = "me") {
 
   dots <- function(...) {
     eval(substitute(alist(...)))
