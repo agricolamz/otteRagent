@@ -116,7 +116,7 @@ run_task <- function(task,
                      schedule = "once",
                      log_message = "Отправляю письмо на gmail с сообщением об ошибке",
                      params = list(subject = "Нет умения для задачи",
-                                   message = str_glue("Я не нашел умения {skill} для задачи {task} и поменял ее статус на `ignore`.")),
+                                   message = str_glue("Я не нашел умения `{skill}` для задачи **{task}** и поменял ее статус на `ignore`.")),
                      path_to_tasks = path_to_tasks)
     }
   }
