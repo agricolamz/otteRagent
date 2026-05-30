@@ -1,6 +1,38 @@
+#' Run the task
+#'
+#' @param path_to_tasks path to tasks
+#' @param log_message message for adding to logs
+#'
+#' @importFrom logger log_debug
+#' @importFrom logger log_info
+#' @importFrom logger log_error
+#' @importFrom logger log_warn
+#' @importFrom readr read_csv
+#'
+
+apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
+                              log_message = "Выполняю правила обработки почты") {
+
+  logger::log_debug("📨  Запуск умения `apply_inbox_rules`")
+
+  # проверка параметров -----------------------------------------------------
+
+  inbox_rules <- readr::read_csv(inbox_rules_path)
+
+  # начало работы функции ---------------------------------------------------
+
+  logger::log_info("📨  {log_message}")
+
+
+  logger::log_debug("📨  Завершение запуска умения `run_task`")
+}
+
+
+
+
 # my_threads <- gmailr::gm_threads(search = "is:unread")
 #
-# seq(1, 23) |>
+# seq(1, length(my_threads[[1]]$threads)) |>
 #   purrr::map(function(i){
 #
 #     thread <- gmailr::gm_thread(gmailr::gm_id(my_threads)[[i]])
@@ -23,13 +55,13 @@
 #   purrr::list_rbind() ->
 #   result
 #
-# library(tidyverse)
+#
 # result |>
 #   mutate(labels = str_split(labels, ";")) |>
 #   unnest_longer(labels) |>
 #   count(labels, sort = TRUE)
 #
-# inbox_rules <- read_csv("../../otter_space/inbox_rules.csv")
+#
 #
 #
 # seq_along(inbox_rules$id) |>
