@@ -102,5 +102,3 @@ gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
 
   logger::log_debug("🦦  Завершение запуска умения `gather_tasks`")
 }
-
-

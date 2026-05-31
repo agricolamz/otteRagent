@@ -1,6 +1,6 @@
 #' Apply inbox rules
 #'
-#' @param path_to_tasks path to tasks
+#' @param inbox_rules_path path to the file of inbox rules
 #' @param log_message message for adding to logs
 #'
 #' @importFrom logger log_debug
@@ -25,6 +25,8 @@
 #' @importFrom purrr list_rbind
 #' @importFrom dplyr left_join
 #' @importFrom dplyr filter
+#' @importFrom dplyr rename
+#' @importFrom dplyr pull
 
 
 apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
@@ -62,7 +64,7 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
   absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_colnames))]
 
   if(length(absent_colnames) == 0){
-    logger::log_debug("📨  в файле с правилами правильные колонки")
+    logger::log_debug("📨  в файле с правилами верные колонки")
   } else {
     logger::log_error("📨  в файле с правилами нет колонки {absent_colnames}")
     stop()
@@ -139,7 +141,6 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
     purrr::list_rbind() ->
     result
 
-
   seq_along(inbox_rules$id) |>
     purrr::map(function(i){
       result |>
@@ -148,36 +149,58 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
                       !is.na(remove_labels),
                       stringr::str_detect(subject, inbox_rules$str_detect_subject[i]))
     }) |>
-    purrr::list_rbind() ->
+    purrr::list_rbind() |>
+    dplyr::rename(rule_id = id) ->
     changes
 
-  changes |>
-    readr::write_csv(inbox_rules_logs, append = TRUE)
+  if(nrow(changes) > 0){
 
-  logger::log_debug("📨  Завершение запуска умения `run_task`")
+  if(file.exists(inbox_rules_logs)){
+    changes |>
+      readr::write_csv(inbox_rules_logs, append = TRUE)
+  } else {
+    changes |>
+      readr::write_csv(inbox_rules_logs)
+  }
+
+  readr::read_csv(inbox_rules_logs,
+                  n_max = 0,
+                  show_col_types = FALSE,
+                  progress = FALSE) |>
+    colnames() ->
+    inbox_rules_logs_colnames
+
+  expected_colnames <- c("from", "to", "subject", "date", "snippet", "labels",
+                         "thread_id", "rule_id", "str_detect_subject",
+                         "add_labels", "remove_labels")
+
+  absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_logs_colnames))]
+
+  if(length(absent_colnames) == 0){
+    logger::log_debug("📨  в файле с логами применения правил верные колонки")
+  } else {
+    logger::log_error("📨  в файле с логами применения правил нет колонки {absent_colnames}")
+    stop()
+  }
+
+  changes$rule_id |>
+    unique() |>
+    purrr::walk(function(rule_id){
+      changes |>
+        dplyr::filter(rule_id == rule_id) |>
+        dplyr::pull(thread_id) |>
+        purrr::walk(function(thread_id){
+          i <- which(changes$thread_id == thread_id)
+          gm_modify_thread_fixed(id = thread_id,
+                                 add_labels = changes$add_labels[i],
+                                 remove_labels = inbox_rules$remove_labels[i])
+        })
+    })
+  } else {
+
+    logger::log_info("📨  Не найдено писем для применения правил")
+  }
+
+  logger::log_debug("📨  Завершение запуска умения `apply_inbox_rules`")
 }
 
-
-#
-#
-# result |>
-#   mutate(labels = str_split(labels, ";")) |>
-#   unnest_longer(labels) |>
-#   count(labels, sort = TRUE)
-#
-#
-#
-#
-# seq_along(inbox_rules$id) |>
-#   walk(function(i){
-#     result |>
-#       filter(from %in% inbox_rules$from[i],
-#              to %in% inbox_rules$to[i],
-#              str_detect(subject, inbox_rules$str_detect_subject[i])) |>
-#       pull(id) |>
-#       walk(ids, function(id){
-#         gm_modify_thread_fixed(id = id,
-#                                add_labels = inbox_rules$add_labels,
-#                                remove_labels = inbox_rules$remove_labels)
-#       })
-#   })

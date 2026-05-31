@@ -10,9 +10,9 @@ apply_inbox_rules(
 )
 }
 \arguments{
-\item{log_message}{message for adding to logs}
+\item{inbox_rules_path}{path to the file of inbox rules}
 
-\item{path_to_tasks}{path to tasks}
+\item{log_message}{message for adding to logs}
 }
 \description{
 Apply inbox rules
