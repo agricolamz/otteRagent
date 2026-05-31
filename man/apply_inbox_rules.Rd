@@ -2,7 +2,7 @@
 % Please edit documentation in R/apply_inbox_rules.R
 \name{apply_inbox_rules}
 \alias{apply_inbox_rules}
-\title{Run the task}
+\title{Apply inbox rules}
 \usage{
 apply_inbox_rules(
   inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
@@ -15,5 +15,5 @@ apply_inbox_rules(
 \item{path_to_tasks}{path to tasks}
 }
 \description{
-Run the task
+Apply inbox rules
 }

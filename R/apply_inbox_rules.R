@@ -1,4 +1,4 @@
-#' Run the task
+#' Apply inbox rules
 #'
 #' @param path_to_tasks path to tasks
 #' @param log_message message for adding to logs
@@ -17,7 +17,67 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
   # проверка параметров -----------------------------------------------------
 
-  inbox_rules <- readr::read_csv(inbox_rules_path)
+  logger::log_debug("📨  проверка параметров")
+
+  if(exists("inbox_rules_path")){
+    logger::log_debug("📨  параметр `inbox_rules_path` есть")
+  } else {
+    logger::log_error("📨  нет параметра `inbox_rules_path`")
+    stop()
+  }
+
+  readr::read_csv(inbox_rules_path,
+                  show_col_types = FALSE,
+                  progress = FALSE,
+                  n_max = 0,
+                  col_types = list(
+                    id = "d",
+                    from = "c",
+                    to = "c",
+                    str_detect_subject = "c",
+                    add_labels = "c",
+                    remove_labels = "c")) |>
+    colnames() ->
+    inbox_rules_colnames
+
+  expected_colnames <- c("id", "from", "to", "str_detect_subject", "add_labels", "remove_labels")
+
+  absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_colnames))]
+
+  if(length(absent_colnames) == 0){
+    logger::log_debug("📨  в файле с правилами правильные колонки")
+  } else {
+    logger::log_error("📨  в файле с правилами нет колонки {absent_colnames}")
+    stop()
+  }
+
+  readr::read_csv(inbox_rules_path,
+                  show_col_types = FALSE,
+                  progress = FALSE,
+                  n_max = 1,
+                  col_types = list(
+                    id = "d",
+                    from = "c",
+                    to = "c",
+                    str_detect_subject = "c",
+                    add_labels = "c",
+                    remove_labels = "c")) |>
+    nrow() ->
+    inbox_rules_emptyness
+
+  if(inbox_rules_emptyness == 1){
+    logger::log_debug("📨  в файле с правилами есть правила")
+  } else {
+    logger::log_error("📨  в файле с правилами нет правил")
+    stop()
+  }
+
+  if(is.null(gmailr::gm_profile())){
+    logger::log_error("📨  Not logged in as any specific Google user.")
+    stop()
+  } else {
+    logger::log_debug("📨  OAuth client set up")
+  }
 
   # начало работы функции ---------------------------------------------------
 
@@ -26,9 +86,6 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
   logger::log_debug("📨  Завершение запуска умения `run_task`")
 }
-
-
-
 
 # my_threads <- gmailr::gm_threads(search = "is:unread")
 #

@@ -121,6 +121,7 @@ add_to_backlog <- function(task = "новое задание",
     path_to_tasks |>
       readr::read_csv(show_col_types = FALSE,
                       progress = FALSE,
+                      n_max = 0,
                       col_types = list(
                         id = "d",
                         task = "c",
