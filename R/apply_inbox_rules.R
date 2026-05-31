@@ -8,7 +8,24 @@
 #' @importFrom logger log_error
 #' @importFrom logger log_warn
 #' @importFrom readr read_csv
-#'
+#' @importFrom readr write_csv
+#' @importFrom stringr str_remove
+#' @importFrom stringr str_c
+#' @importFrom stringr str_extract
+#' @importFrom gmailr gm_threads
+#' @importFrom gmailr gm_thread
+#' @importFrom gmailr gm_id
+#' @importFrom gmailr gm_from
+#' @importFrom gmailr gm_to
+#' @importFrom gmailr gm_subject
+#' @importFrom gmailr gm_date
+#' @importFrom lubridate ymd_hms
+#' @importFrom lubridate now
+#' @importFrom purrr map
+#' @importFrom purrr list_rbind
+#' @importFrom dplyr left_join
+#' @importFrom dplyr filter
+
 
 apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
                               log_message = "Выполняю правила обработки почты") {
@@ -83,34 +100,69 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
   logger::log_info("📨  {log_message}")
 
+  inbox_rules <- readr::read_csv(inbox_rules_path,
+                                 show_col_types = FALSE,
+                                 progress = FALSE,
+                                 col_types = list(
+                                   id = "d",
+                                   from = "c",
+                                   to = "c",
+                                   str_detect_subject = "c",
+                                   add_labels = "c",
+                                   remove_labels = "c"))
+
+  getOption("otteRagent_path_to_inbox_rules") |>
+    stringr::str_remove("\\.csv") |>
+    stringr::str_c("_logs.csv") ->
+    inbox_rules_logs
+
+  my_threads <- gmailr::gm_threads(search = "is:unread")
+
+  seq(1, length(my_threads[[1]]$threads)) |>
+    purrr::map(function(i){
+
+      thread <- gmailr::gm_thread(gmailr::gm_id(my_threads)[[i]])
+
+      tibble::tibble(from = gmailr::gm_from(thread$messages[[1]]),
+                     to = gmailr::gm_to(thread$messages[[1]]),
+                     subject = gmailr::gm_subject(thread$messages[[1]]),
+                     date = gmailr::gm_date(thread),
+                     snippet = thread$messages[[1]]$snippet,
+                     labels = thread$messages[[1]]$labelIds |>
+                       unlist() |>
+                       stringr::str_c(collapse = ";"),
+                     thread_id = thread$id) |>
+        dplyr::mutate(year = stringr::str_extract(date, "\\d{4}$"),
+                      date = stringr::str_remove(date, "\\d{4}$"),
+                      date = stringr::str_remove(date, "^\\w{3} "),
+                      date = stringr::str_c(year, " ", date),
+                      date = lubridate::ymd_hms(date)) |>
+        dplyr::select(-year)
+    }) |>
+    purrr::list_rbind() ->
+    result
+
+
+  seq_along(inbox_rules$id) |>
+    purrr::map(function(i){
+      result |>
+        dplyr::left_join(inbox_rules[i, ], by = c("from", "to")) |>
+        dplyr::filter(!is.na(add_labels),
+                      !is.na(remove_labels),
+                      stringr::str_detect(subject, inbox_rules$str_detect_subject[i]))
+    }) |>
+    purrr::list_rbind() ->
+    changes
+
+  changes |>
+    dplyr::mutate(timestamp = lubridate::now())
+    readr::write_csv(inbox_rules_logs)
+
 
   logger::log_debug("📨  Завершение запуска умения `run_task`")
 }
 
-# my_threads <- gmailr::gm_threads(search = "is:unread")
-#
-# seq(1, length(my_threads[[1]]$threads)) |>
-#   purrr::map(function(i){
-#
-#     thread <- gmailr::gm_thread(gmailr::gm_id(my_threads)[[i]])
-#
-#     tibble::tibble(from = gmailr::gm_from(thread$messages[[1]]),
-#                    to = gmailr::gm_to(thread$messages[[1]]),
-#                    subject = gmailr::gm_subject(thread$messages[[1]]),
-#                    date = gmailr::gm_date(thread),
-#                    snippet = thread$messages[[1]]$snippet,
-#                    labels = thread$messages[[1]]$labelIds |>
-#                      unlist() |>
-#                      stringr::str_c(collapse = ";"),
-#                    id = thread$id) |>
-#       dplyr::mutate(year = stringr::str_extract(date, "\\d{4}$"),
-#                     date = stringr::str_remove(date, "\\d{4}$"),
-#                     date = stringr::str_remove(date, "^\\w{3} "),
-#                     date = stringr::str_c(year, " ", date),
-#                     date = lubridate::ymd_hms(date))
-#   }) |>
-#   purrr::list_rbind() ->
-#   result
+
 #
 #
 # result |>
