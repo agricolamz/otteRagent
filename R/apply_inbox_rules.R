@@ -19,7 +19,7 @@
 #' @importFrom gmailr gm_to
 #' @importFrom gmailr gm_subject
 #' @importFrom gmailr gm_date
-#' @importFrom lubridate ymd_hms
+#' @importFrom lubridate parse_date_time
 #' @importFrom lubridate now
 #' @importFrom purrr map
 #' @importFrom purrr list_rbind
@@ -123,21 +123,18 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
       thread <- gmailr::gm_thread(gmailr::gm_id(my_threads)[[i]])
 
-      tibble::tibble(from = gmailr::gm_from(thread$messages[[1]]),
-                     to = gmailr::gm_to(thread$messages[[1]]),
-                     subject = gmailr::gm_subject(thread$messages[[1]]),
-                     date = gmailr::gm_date(thread),
-                     snippet = thread$messages[[1]]$snippet,
-                     labels = thread$messages[[1]]$labelIds |>
+      n_messages <- thread$messages |> length()
+
+      tibble::tibble(from = gmailr::gm_from(thread$messages[[n_messages]]),
+                     to = gmailr::gm_to(thread$messages[[n_messages]]),
+                     subject = gmailr::gm_subject(thread$messages[[n_messages]]),
+                     date = gmailr::gm_date(thread) |>
+                       lubridate::parse_date_time(orders = "amdHMSy"),
+                     snippet = thread$messages[[n_messages]]$snippet,
+                     labels = thread$messages[[n_messages]]$labelIds |>
                        unlist() |>
                        stringr::str_c(collapse = ";"),
-                     thread_id = thread$id) |>
-        dplyr::mutate(year = stringr::str_extract(date, "\\d{4}$"),
-                      date = stringr::str_remove(date, "\\d{4}$"),
-                      date = stringr::str_remove(date, "^\\w{3} "),
-                      date = stringr::str_c(year, " ", date),
-                      date = lubridate::ymd_hms(date)) |>
-        dplyr::select(-year)
+                     thread_id = thread$id)
     }) |>
     purrr::list_rbind() ->
     result
@@ -155,9 +152,7 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
     changes
 
   changes |>
-    dplyr::mutate(timestamp = lubridate::now())
-    readr::write_csv(inbox_rules_logs)
-
+    readr::write_csv(inbox_rules_logs, append = TRUE)
 
   logger::log_debug("📨  Завершение запуска умения `run_task`")
 }
