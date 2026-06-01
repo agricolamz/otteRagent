@@ -106,7 +106,7 @@ run_task <- function(task,
 
     if(curl::has_internet()){
       sent_gmail_message(subject = "Нет умения для задачи",
-                         message = str_glue("Я не нашел умения {skill} для задачи {task} и поменял ее статус на `ignore`."),
+                         message = str_glue("Я не нашел умения `{skill}` для задачи **{task}** и поменял ее статус на `ignore`."),
                          log_message = "Отправляю письмо на gmail с сообщением об ошибке")
     } else {
       logger::log_warn("🦦  Интернета нет, так что я не сообщил о проблеме")

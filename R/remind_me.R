@@ -23,7 +23,7 @@ remind_me <- function(at,
                       to = getOption("otteRagent_preferred_out_mail"),
                       log_message = "Решаю, выслать ли автоматическое напоминание"){
 
-  logger::log_debug("🦦  Запуск умения `remind`")
+  logger::log_debug("🦦  Запуск умения `remind_me`")
 
   # проверка параметров -----------------------------------------------------
 
@@ -97,7 +97,7 @@ remind_me <- function(at,
 
   if(lubridate::now(tz = tz) <= time_for_comparison){
     add_to_backlog(task = "Прислать напоминание",
-                   skill = "remind",
+                   skill = "remind_me",
                    schedule = "once",
                    ignore = NA,
                    params = list(at = at,
@@ -112,6 +112,6 @@ remind_me <- function(at,
                        log_message = log_message)
   }
 
-  logger::log_debug("🦦  Завершение запуска умения `remind`")
+  logger::log_debug("🦦  Завершение запуска умения `remind_me`")
 
 }
