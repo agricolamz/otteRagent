@@ -25,9 +25,11 @@
 #' @importFrom purrr list_rbind
 #' @importFrom dplyr left_join
 #' @importFrom dplyr filter
+#' @importFrom dplyr slice
 #' @importFrom dplyr rename
 #' @importFrom dplyr pull
-
+#'
+#' @export
 
 apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
                               log_message = "Выполняю правила обработки почты") {
@@ -53,13 +55,13 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
                     id = "d",
                     from = "c",
                     to = "c",
-                    str_detect_subject = "c",
+                    subject = "c",
                     add_labels = "c",
                     remove_labels = "c")) |>
     colnames() ->
     inbox_rules_colnames
 
-  expected_colnames <- c("id", "from", "to", "str_detect_subject", "add_labels", "remove_labels")
+  expected_colnames <- c("id", "from", "to", "subject", "add_labels", "remove_labels")
 
   absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_colnames))]
 
@@ -78,7 +80,7 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
                     id = "d",
                     from = "c",
                     to = "c",
-                    str_detect_subject = "c",
+                    subject = "c",
                     add_labels = "c",
                     remove_labels = "c")) |>
     nrow() ->
@@ -109,13 +111,13 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
                                    id = "d",
                                    from = "c",
                                    to = "c",
-                                   str_detect_subject = "c",
+                                   subject = "c",
                                    add_labels = "c",
                                    remove_labels = "c"))
 
-  getOption("otteRagent_path_to_inbox_rules") |>
-    stringr::str_remove("\\.csv") |>
-    stringr::str_c("_logs.csv") ->
+  getOption("otteRagent_path_to_logs") |>
+    stringr::str_remove("logs\\.txt") |>
+    stringr::str_c("inbox_rules_logs.csv") ->
     inbox_rules_logs
 
   my_threads <- gmailr::gm_threads(search = "is:unread")
@@ -143,14 +145,33 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
   seq_along(inbox_rules$id) |>
     purrr::map(function(i){
+
+      if(is.na(inbox_rules$from[i])){
+        index_from <- TRUE
+      } else {
+        index_from <- stringr::str_detect(result$from, inbox_rules$from[i])
+      }
+
+      if(is.na(inbox_rules$to[i])){
+        index_to <- TRUE
+      } else {
+        index_to <- stringr::str_detect(result$to, inbox_rules$to[i])
+        index_to <- ifelse(is.na(index_to), TRUE, index_to)
+      }
+
+      if(is.na(inbox_rules$subject[i])){
+        index_subject <- TRUE
+      } else {
+        index_subject <- stringr::str_detect(result$subject, inbox_rules$subject[i])
+      }
+
       result |>
-        dplyr::left_join(inbox_rules[i, ], by = c("from", "to")) |>
-        dplyr::filter(!is.na(add_labels),
-                      !is.na(remove_labels),
-                      stringr::str_detect(subject, inbox_rules$str_detect_subject[i]))
+        dplyr::slice(which(index_from & index_to & index_subject)) |>
+        dplyr::mutate(add_labels = inbox_rules$add_labels[i],
+               remove_labels = inbox_rules$remove_labels[i],
+               rule_id = inbox_rules$id[i])
     }) |>
-    purrr::list_rbind() |>
-    dplyr::rename(rule_id = id) ->
+    purrr::list_rbind() ->
     changes
 
   if(nrow(changes) > 0){
@@ -171,7 +192,7 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
     inbox_rules_logs_colnames
 
   expected_colnames <- c("from", "to", "subject", "date", "snippet", "labels",
-                         "thread_id", "rule_id", "str_detect_subject",
+                         "thread_id", "rule_id", "subject",
                          "add_labels", "remove_labels")
 
   absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_logs_colnames))]

@@ -24,6 +24,8 @@
 #' @importFrom gmailr gm_subject
 #' @importFrom tibble tibble
 #' @importFrom yaml yaml.load
+#'
+#' @export
 
 gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
                          log_message = "Собираю задания из gmail"){

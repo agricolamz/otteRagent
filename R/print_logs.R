@@ -7,7 +7,6 @@
 #' @importFrom logger log_error
 #' @importFrom logger log_info
 #'
-#'
 #' @export
 
 print_logs <- function(log_message = "Печатаю логи:"){
