@@ -32,6 +32,7 @@
 #' @export
 
 apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
+                              daily_report_interval = NA,
                               log_message = "Выполняю правила обработки почты") {
 
   logger::log_debug("📨  Запуск умения `apply_inbox_rules`")
@@ -40,10 +41,19 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
   logger::log_debug("📨  проверка параметров")
 
+  "report_inbox_logs"
+
   if(exists("inbox_rules_path")){
     logger::log_debug("📨  параметр `inbox_rules_path` есть")
   } else {
     logger::log_error("📨  нет параметра `inbox_rules_path`")
+    stop()
+  }
+
+  if(file.exists(inbox_rules_path)){
+    logger::log_debug("📨  файл с правилами оброботки почты есть")
+  } else {
+    logger::log_error("📨  нет файла с правилами оброботки почты")
     stop()
   }
 
@@ -99,6 +109,26 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
   } else {
     logger::log_debug("📨  OAuth client set up")
   }
+
+  if(exists("daily_report_interval")){
+    logger::log_debug("📨  параметр `daily_report_interval` есть")
+  } else {
+    logger::log_error("📨  нет параметра `daily_report_interval`")
+    stop()
+  }
+
+  if(!is.na(daily_report_interval)){
+
+    if(str_detect(daily_report_interval, "\\d{1,2}:\\d{2}-\\d{1,2}:\\d{2}")){
+      logger::log_debug("📨  параметр `daily_report_interval` имеет правильный формат")
+    } else {
+      logger::log_error("📨  параметр `daily_report_interval` должен быть либо NA, либо в формате `4:30-5:30`")
+      stop()
+    }
+
+
+  }
+
 
   # начало работы функции ---------------------------------------------------
 
@@ -168,58 +198,90 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
       result |>
         dplyr::slice(which(index_from & index_to & index_subject)) |>
         dplyr::mutate(add_labels = inbox_rules$add_labels[i],
-               remove_labels = inbox_rules$remove_labels[i],
-               rule_id = inbox_rules$id[i])
+                      remove_labels = inbox_rules$remove_labels[i],
+                      rule_id = inbox_rules$id[i])
     }) |>
-    purrr::list_rbind() ->
+    purrr::list_rbind() |>
+    mutate(reported = FALSE) ->
     changes
 
   if(nrow(changes) > 0){
 
-  if(file.exists(inbox_rules_logs)){
-    changes |>
-      readr::write_csv(inbox_rules_logs, append = TRUE, na = "")
-  } else {
-    changes |>
-      readr::write_csv(inbox_rules_logs, na = "")
-  }
-
-  readr::read_csv(inbox_rules_logs,
-                  n_max = 0,
-                  show_col_types = FALSE,
-                  progress = FALSE) |>
-    colnames() ->
-    inbox_rules_logs_colnames
-
-  expected_colnames <- c("from", "to", "subject", "date", "snippet", "labels",
-                         "thread_id", "rule_id", "subject",
-                         "add_labels", "remove_labels")
-
-  absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_logs_colnames))]
-
-  if(length(absent_colnames) == 0){
-    logger::log_debug("📨  в файле с логами применения правил верные колонки")
-  } else {
-    logger::log_error("📨  в файле с логами применения правил нет колонки {absent_colnames}")
-    stop()
-  }
-
-  changes$rule_id |>
-    unique() |>
-    purrr::walk(function(rule_id){
+    if(file.exists(inbox_rules_logs)){
       changes |>
-        dplyr::filter(rule_id == rule_id) |>
-        dplyr::pull(thread_id) |>
-        purrr::walk(function(thread_id){
-          i <- which(changes$thread_id == thread_id)
-          gm_modify_thread_fixed(id = thread_id,
-                                 add_labels = changes$add_labels[i],
-                                 remove_labels = inbox_rules$remove_labels[i])
-        })
-    })
+        readr::write_csv(inbox_rules_logs, append = TRUE, na = "")
+    } else {
+      changes |>
+        readr::write_csv(inbox_rules_logs, na = "")
+    }
+
+    readr::read_csv(inbox_rules_logs,
+                    n_max = 0,
+                    show_col_types = FALSE,
+                    progress = FALSE) |>
+      colnames() ->
+      inbox_rules_logs_colnames
+
+    expected_colnames <- c("from", "to", "subject", "date", "snippet", "labels",
+                           "thread_id", "rule_id", "subject",
+                           "add_labels", "remove_labels")
+
+    absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_logs_colnames))]
+
+    if(length(absent_colnames) == 0){
+      logger::log_debug("📨  в файле с логами применения правил верные колонки")
+    } else {
+      logger::log_error("📨  в файле с логами применения правил нет колонки {absent_colnames}")
+      stop()
+    }
+
+    changes$rule_id |>
+      unique() |>
+      purrr::walk(function(rule_id){
+        changes |>
+          dplyr::filter(rule_id == rule_id) |>
+          dplyr::pull(thread_id) |>
+          purrr::walk(function(thread_id){
+            i <- which(changes$thread_id == thread_id)
+            gm_modify_thread_fixed(id = thread_id,
+                                   add_labels = changes$add_labels[i],
+                                   remove_labels = inbox_rules$remove_labels[i])
+          })
+      })
   } else {
 
     logger::log_info("📨  Не найдено писем для применения правил")
+  }
+
+  if(!is.na(daily_report_interval)){
+
+    daily_report_interval |>
+      stringr::str_split("-") |>
+      unlist() |>
+      stringr::str_split(":") |>
+      unlist() |>
+      as.double() ->
+      for_intervals
+
+    interval_start <- lubridate::now()
+    lubridate::hour(interval_start) <- for_intervals[1]
+    lubridate::minute(interval_start) <- for_intervals[2]
+
+    interval_end <- lubridate::now()
+    lubridate::hour(interval_end) <- for_intervals[3]
+    lubridate::minute(interval_end) <- for_intervals[4]
+
+    if(lubridate::int_overlaps(
+      lubridate::interval(
+        lubridate::now(),
+        lubridate::now()),
+      lubridate::interval(
+        interval_start,
+        interval_end))){
+
+      report_inbox_logs()
+
+    }
   }
 
   logger::log_debug("📨  Завершение запуска умения `apply_inbox_rules`")

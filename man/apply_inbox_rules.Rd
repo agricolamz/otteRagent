@@ -6,6 +6,7 @@
 \usage{
 apply_inbox_rules(
   inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
+  daily_report_interval = NA,
   log_message = "Выполняю правила обработки почты"
 )
 }

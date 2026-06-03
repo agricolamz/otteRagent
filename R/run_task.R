@@ -126,8 +126,10 @@ run_task <- function(task,
 
   logger::log_info("🦦  {log_message}")
 
-  if(is.na(params)){
-    params <- list()
+  if(length(params) < 2) {
+    if(is.na(params)){
+      params <- list()
+    }
   }
 
   if(!is.list(params)){

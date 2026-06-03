@@ -25,6 +25,16 @@ check_tasklist <- function(path_to_tasks = getOption("otteRagent_path_to_tasks")
 
   logger::log_debug("📋️  проверка параметров")
 
+  skills <- c("run_task")
+
+  if(sum(skills |> purrr::map_lgl(exists)) == length(skills)){
+    logger::log_debug("📋  Все необходимые умения есть.")
+  } else {
+    logger::log_error("📋  Один из следующих умений не установлен: {skills}")
+    stop()
+  }
+
+
   if(file.exists(path_to_tasks)){
     logger::log_debug("📋️  файл с задачами существует")
   } else {
