@@ -15,6 +15,7 @@
 #' @importFrom readr read_csv
 #' @importFrom dplyr mutate
 #' @importFrom dplyr filter
+#' @importFrom dplyr if_else
 #' @importFrom readr write_csv
 #' @importFrom stringr str_glue
 #' @importFrom yaml yaml.load

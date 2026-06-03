@@ -84,15 +84,16 @@ add_to_backlog <- function(task = "новое задание",
   }
 
   if(file.exists(path_to_tasks)){
-    logger::log_debug("🦦  файл с заданиями существует")
+    logger::log_debug("🦦  файл с задачами существует")
   } else {
-    logger::log_error("🦦  нет файла с заданиями")
+    logger::log_error("🦦  нет файла с задачами")
     stop()
   }
 
   readr::read_csv(path_to_tasks,
                   show_col_types = FALSE,
                   progress = FALSE,
+                  n_max = 0,
                   col_types = list(
                     id = "d",
                     task = "c",
@@ -108,9 +109,9 @@ add_to_backlog <- function(task = "новое задание",
   absent_colnames <- expected_colnames[which(!(expected_colnames %in% task_colnames))]
 
   if(length(absent_colnames) == 0){
-    logger::log_debug("🦦  в файле с заданиями правильные колонки")
+    logger::log_debug("🦦  в файле с задачами правильные колонки")
   } else {
-    logger::log_error("🦦  в файле с заданиями нет колонки {absent_colnames}")
+    logger::log_error("🦦  в файле с задачами нет колонки {absent_colnames}")
     stop()
   }
 
