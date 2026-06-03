@@ -178,10 +178,10 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
 
   if(file.exists(inbox_rules_logs)){
     changes |>
-      readr::write_csv(inbox_rules_logs, append = TRUE)
+      readr::write_csv(inbox_rules_logs, append = TRUE, na = "")
   } else {
     changes |>
-      readr::write_csv(inbox_rules_logs)
+      readr::write_csv(inbox_rules_logs, na = "")
   }
 
   readr::read_csv(inbox_rules_logs,
