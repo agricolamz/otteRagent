@@ -10,7 +10,7 @@ add_to_backlog(
   schedule = "once",
   ignore = NA,
   params = list(),
-  path_to_tasks = getOption("otteRagent_path_to_tasks"),
+  path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
   immediate_execute = FALSE,
   log_message = "Добавляю задание в список задач"
 )

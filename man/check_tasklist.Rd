@@ -5,7 +5,7 @@
 \title{Check the task list and run all tasks}
 \usage{
 check_tasklist(
-  path_to_tasks = getOption("otteRagent_path_to_tasks"),
+  path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
   log_message = "Начало сессии. Читаю список задач"
 )
 }

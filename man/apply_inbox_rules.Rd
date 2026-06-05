@@ -5,7 +5,7 @@
 \title{Apply inbox rules}
 \usage{
 apply_inbox_rules(
-  inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
+  inbox_rules_path = stringr::str_c(getOption("otteRagent_directory"), "inbox_rules.csv"),
   daily_report_interval = NA,
   log_message = "Выполняю правила обработки почты"
 )

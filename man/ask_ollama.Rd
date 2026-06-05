@@ -8,7 +8,7 @@ ask_ollama(
   ollama_model = "gemma4:26b",
   ollama_message,
   log_message = "Делаю запрос модели Ollama",
-  path_to_tasks = getOption("otteRagent_path_to_tasks")
+  path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")
 )
 }
 \arguments{

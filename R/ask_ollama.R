@@ -12,13 +12,14 @@
 #' @importFrom ollamar model_avail
 #' @importFrom purrr map_lgl
 #' @importFrom stringr str_glue
+#' @importFrom stringr str_c
 #'
 #' @export
 
 ask_ollama <- function(ollama_model = "gemma4:26b",
                        ollama_message,
                        log_message = "Делаю запрос модели Ollama",
-                       path_to_tasks = getOption("otteRagent_path_to_tasks")){
+                       path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")){
 
   logger::log_debug("🦦  Запуск умения `ask_ollama`")
 

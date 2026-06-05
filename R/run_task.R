@@ -28,7 +28,7 @@ run_task <- function(task,
                      params,
                      schedule,
                      task_id,
-                     path_to_tasks = getOption("otteRagent_path_to_tasks"),
+                     path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
                      log_message = stringr::str_glue("{task} начинается, запускаю умение {skill}")){
 
   logger::log_debug("🦦  Запуск умения `run_task`")

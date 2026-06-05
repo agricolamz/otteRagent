@@ -3,9 +3,15 @@
 #' @param log_message message for adding to logs
 #' @param path_to_tasks path to tasks
 #'
+#' @importFrom logger log_debug
+#' @importFrom logger log_info
+#' @importFrom logger log_error
+#' @importFrom stringr str_c
+#' @importFrom purrr map_lgl
+#'
 #' @export
 
-report_inbox_logs <- function(path_to_tasks = getOption("otteRagent_path_to_tasks"),
+report_inbox_logs <- function(path_to_tasks = stringr::str_c(("otteRagent_directory"), "tasks.csv"),
                               log_message = "Выполняю отправку логов изменени в почте"){
 
   logger::log_debug("📨  Запуск умения `report_inbox_logs`")
@@ -21,8 +27,7 @@ report_inbox_logs <- function(path_to_tasks = getOption("otteRagent_path_to_task
     stop()
   }
 
-  getOption("otteRagent_path_to_logs") |>
-    stringr::str_remove("logs\\.txt") |>
+  getOption("otteRagent_directory") |>
     stringr::str_c("inbox_rules_logs.csv") ->
     inbox_rules_logs
 

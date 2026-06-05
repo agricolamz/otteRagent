@@ -3,6 +3,7 @@
 #' @param log_message message for adding to logs
 #'
 #' @importFrom readr read_lines
+#' @importFrom stringr str_c
 #' @importFrom logger log_debug
 #' @importFrom logger log_error
 #' @importFrom logger log_info
@@ -17,7 +18,7 @@ print_logs <- function(log_message = "Печатаю логи:"){
 
   logger::log_debug("🦦  проверка параметров")
 
-  if(file.exists(getOption("otteRagent_path_to_logs"))){
+  if(file.exists(stringr::str_c(getOption("otteRagent_directory", "logs/logs.txt")))){
     logger::log_debug("🦦  файл логов есть")
   } else {
     logger::log_error("🦦  файла логов нет")
@@ -28,7 +29,7 @@ print_logs <- function(log_message = "Печатаю логи:"){
 
   logger::log_info("🦦  {log_message}\n\n")
 
-  getOption("otteRagent_path_to_logs") |>
+  stringr::str_c(getOption("otteRagent_directory", "logs/logs.txt")) |>
     readr::read_lines() |>
     cat(sep = "\n")
 

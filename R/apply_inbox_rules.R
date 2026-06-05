@@ -31,7 +31,7 @@
 #'
 #' @export
 
-apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_inbox_rules"),
+apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteRagent_directory"), "inbox_rules.csv"),
                               daily_report_interval = NA,
                               log_message = "Выполняю правила обработки почты") {
 
@@ -145,8 +145,7 @@ apply_inbox_rules <- function(inbox_rules_path = getOption("otteRagent_path_to_i
                                    add_labels = "c",
                                    remove_labels = "c"))
 
-  getOption("otteRagent_path_to_logs") |>
-    stringr::str_remove("logs\\.txt") |>
+  getOption("otteRagent_directory") |>
     stringr::str_c("inbox_rules_logs.csv") ->
     inbox_rules_logs
 

@@ -5,7 +5,7 @@
 \title{Read inbox logs and sent a mail about them}
 \usage{
 report_inbox_logs(
-  path_to_tasks = getOption("otteRagent_path_to_tasks"),
+  path_to_tasks = stringr::str_c(("otteRagent_directory"), "tasks.csv"),
   log_message =
     "Выполняю отправку логов изменени в почте"
 )
