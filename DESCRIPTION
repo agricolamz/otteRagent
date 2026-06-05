@@ -14,5 +14,5 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Config/roxygen2/version: 8.0.0
-Imports: curl, dplyr, gmailr, litedown, logger, lubridate, ollamar, purrr, readr, stringr, tibble, yaml
+Imports: curl, dplyr, gmailr, litedown, logger, lubridate, ollamar, purrr, readr, stringr, tibble, yaml, gert
 RoxygenNote: 7.3.3

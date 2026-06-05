@@ -13,6 +13,8 @@ apply_inbox_rules(
 \arguments{
 \item{inbox_rules_path}{path to the file of inbox rules}
 
+\item{daily_report_interval}{if filled turns on the daily report. Range should be in the following format \code{4:30-5:30}. \code{otteRagent} should be running within this interval.}
+
 \item{log_message}{message for adding to logs}
 }
 \description{

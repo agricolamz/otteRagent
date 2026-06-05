@@ -1,6 +1,7 @@
 #' Apply inbox rules
 #'
 #' @param inbox_rules_path path to the file of inbox rules
+#' @param daily_report_interval if filled turns on the daily report. Range should be in the following format \code{4:30-5:30}. \code{otteRagent} should be running within this interval.
 #' @param log_message message for adding to logs
 #'
 #' @importFrom logger log_debug
@@ -126,9 +127,7 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
       stop()
     }
 
-
   }
-
 
   # начало работы функции ---------------------------------------------------
 
