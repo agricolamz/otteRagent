@@ -32,7 +32,7 @@
 #'
 #' @export
 
-apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteRagent_directory"), "inbox_rules.csv"),
+apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteRagent_directory"), "logs/inbox_rules.csv"),
                               daily_report_interval = NA,
                               log_message = "Выполняю правила обработки почты") {
 
