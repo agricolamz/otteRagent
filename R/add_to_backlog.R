@@ -26,7 +26,7 @@ add_to_backlog <- function(task = "новое задание",
                            skill,
                            schedule = "once",
                            ignore = NA,
-                           params = list(),
+                           params = NA,
                            path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
                            immediate_execute = FALSE,
                            log_message = "Добавляю задание в список задач"){

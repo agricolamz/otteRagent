@@ -25,7 +25,7 @@
 
 run_task <- function(task,
                      skill,
-                     params,
+                     params = NA,
                      schedule,
                      task_id,
                      path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
@@ -127,8 +127,13 @@ run_task <- function(task,
   logger::log_info("🦦  {log_message}")
 
   if(length(params) < 2) {
-    if(is.na(params)){
+    if(length(params) == 0){
       params <- list()
+    }
+    if(length(params) == 1){
+      if(is.na(params)){
+        params <- list()
+      }
     }
   }
 

@@ -7,7 +7,7 @@
 run_task(
   task,
   skill,
-  params,
+  params = NA,
   schedule,
   task_id,
   path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
