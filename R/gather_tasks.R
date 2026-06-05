@@ -99,6 +99,7 @@ gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
                      immediate_execute = TRUE)
 
       gm_modify_thread_fixed(id = thread_id,
+                             add_labels = "TRASH",
                              remove_labels = "UNREAD")
     })
 
