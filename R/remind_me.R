@@ -21,7 +21,7 @@ remind_me <- function(at,
                       message,
                       subject = "автоматическое напоминание",
                       to = getOption("otteRagent_preferred_out_mail"),
-                      log_message = "Решаю, выслать ли автоматическое напоминание"){
+                      log_message = "Решаю, высылать ли автоматическое напоминание"){
 
   logger::log_debug("🦦  Запуск умения `remind_me`")
 

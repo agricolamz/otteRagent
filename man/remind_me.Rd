@@ -11,7 +11,7 @@ remind_me(
   subject = "автоматическое напоминание",
   to = getOption("otteRagent_preferred_out_mail"),
   log_message =
-    "Решаю, выслать ли автоматическое напоминание"
+    "Решаю, высылать ли автоматическое напоминание"
 )
 }
 \arguments{
