@@ -11,7 +11,7 @@
 #'
 #' @export
 
-report_inbox_logs <- function(path_to_tasks = stringr::str_c(("otteRagent_directory"), "tasks.csv"),
+report_inbox_logs <- function(path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv"),
                               log_message = "Выполняю отправку логов изменени в почте"){
 
   logger::log_debug("📨  Запуск умения `report_inbox_logs`")
@@ -28,7 +28,7 @@ report_inbox_logs <- function(path_to_tasks = stringr::str_c(("otteRagent_direct
   }
 
   getOption("otteRagent_directory") |>
-    stringr::str_c("inbox_rules_logs.csv") ->
+    stringr::str_c("logs/inbox_rules_logs.csv") ->
     inbox_rules_logs
 
   if(file.exists(inbox_rules_logs)){
