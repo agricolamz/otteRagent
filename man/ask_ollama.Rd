@@ -7,6 +7,9 @@
 ask_ollama(
   ollama_model = "gemma4:26b",
   ollama_message,
+  ollama_attachment = NA,
+  remove_from_attachment = NULL,
+  add_prompt = TRUE,
   log_message = "Делаю запрос модели Ollama",
   path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")
 )
@@ -14,7 +17,13 @@ ask_ollama(
 \arguments{
 \item{ollama_model}{Specifies an Ollama model to call.}
 
-\item{ollama_message}{Text of the prompt.}
+\item{ollama_message}{Text of the add_prompt.}
+
+\item{ollama_attachment}{name of the pdf file that is located in the otteRagent directory in the \code{downloads} subfolder.}
+
+\item{remove_from_attachment}{vector of integers that defines which pages should be excluded from the pdf file (e.g. references and long tables).}
+
+\item{add_prompt}{logical. Indicates, whether add_prompt should be added to the email.}
 
 \item{log_message}{message for adding to logs}
 
