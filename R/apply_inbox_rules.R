@@ -32,7 +32,7 @@
 #'
 #' @export
 
-apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteRagent_directory"), "logs/inbox_rules.csv"),
+apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteRagent_directory"), "inbox_rules.csv"),
                               daily_report_interval = NA,
                               log_message = "Выполняю правила обработки почты") {
 
@@ -145,7 +145,7 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
                                    remove_labels = "c"))
 
   getOption("otteRagent_directory") |>
-    stringr::str_c("inbox_rules_logs.csv") ->
+    stringr::str_c("logs/inbox_rules_logs.csv") ->
     inbox_rules_logs
 
   my_threads <- gmailr::gm_threads(search = "is:unread")
