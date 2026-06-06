@@ -96,15 +96,20 @@ remind_me <- function(at,
   }
 
   if(lubridate::now(tz = tz) <= time_for_comparison){
+
+    list(at = at,
+         tz = tz,
+         message = message,
+         subject = subject,
+         log_message = log_message) |>
+      yaml::as.yaml() ->
+      params
+
     add_to_backlog(task = "Прислать напоминание",
                    skill = "remind_me",
                    schedule = "once",
                    ignore = NA,
-                   params = list(at = at,
-                                 tz = tz,
-                                 message = message,
-                                 subject = subject,
-                                 log_message = log_message))
+                   params =  params)
   } else {
     sent_gmail_message(to = to,
                        subject = subject,
@@ -113,5 +118,4 @@ remind_me <- function(at,
   }
 
   logger::log_debug("🦦  Завершение запуска умения `remind_me`")
-
 }

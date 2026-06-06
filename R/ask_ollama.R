@@ -78,19 +78,19 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
     }
   }
 
-  if(length(remove_from_attachment) > 0){
-    if(!is.na(ollama_attachment)){
-      if(is.integer(remove_from_attachment)){
-        logger::log_debug("🦙  в аргументе `remove_from_attachment` вектор чисел")
-      } else {
-        logger::log_error("🦙  в аргументе `remove_from_attachment` должен быть вектор чисел")
-        stop()
-      }
-    } else {
-      logger::log_error("🦙  аргумент `remove_from_attachment` есть, а аргумент `ollama_attachment` не заполнен")
-      stop()
-    }
-  }
+  # if(length(remove_from_attachment) > 0){
+  #   if(!is.na(ollama_attachment)){
+  #     if(is.integer(remove_from_attachment)){
+  #       logger::log_debug("🦙  в аргументе `remove_from_attachment` вектор чисел")
+  #     } else {
+  #       logger::log_error("🦙  в аргументе `remove_from_attachment` должен быть вектор чисел")
+  #       stop()
+  #     }
+  #   } else {
+  #     logger::log_error("🦙  аргумент `remove_from_attachment` есть, а аргумент `ollama_attachment` не заполнен")
+  #     stop()
+  #   }
+  # }
 
   if(ollamar::test_connection(logical = TRUE)){
     logger::log_debug("🦙  Ollama запущена")
@@ -125,7 +125,7 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
 
   if(!is.na(ollama_attachment)){
 
-    logger::log_debug("🦙  Начинаю работу с pdf-приложением")
+    logger::log_info("🦙  Начинаю обработку pdf-файла")
 
     stringr::str_c(getOption("otteRagent_directory"),
                    "downloads/",
@@ -136,6 +136,11 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
     pages
 
     if(length(remove_from_attachment) > 0){
+      if(is.character(remove_from_attachment)){
+        parse(text = remove_from_attachment) |>
+          eval() ->
+          remove_from_attachment
+      }
       pages <- pages[!(pages %in% remove_from_attachment)]
     }
 

@@ -88,14 +88,26 @@ gather_tasks <- function(from = getOption("otteRagent_preferred_to_mail"),
         yaml::yaml.load() ->
         task_params
 
+      attachments <- gmailr::gm_attachments(thread$messages[[1]])
+
+      if(nrow(attachments) > 0){
+        gmailr::gm_save_attachments(thread$messages[[1]],
+                                    path = stringr::str_c(getOption("otteRagent_directory"), "downloads"))
+      }
+
       if(is.null(task_params$schedule)){
         task_params$schedule <- "once"
       }
 
+      task_params$params |>
+        purrr::flatten() |>
+        yaml::as.yaml() ->
+        task_params$params
+
       add_to_backlog(task = gmailr::gm_subject(thread$messages[[1]]),
                      skill = task_params$skill,
                      schedule = task_params$schedule,
-                     params = task_params$params[[1]],
+                     params = task_params$params,
                      immediate_execute = TRUE)
 
       gm_modify_thread_fixed(id = thread_id,

@@ -123,7 +123,6 @@ add_to_backlog <- function(task = "новое задание",
     path_to_tasks |>
       readr::read_csv(show_col_types = FALSE,
                       progress = FALSE,
-                      n_max = 0,
                       col_types = list(
                         id = "d",
                         task = "c",
@@ -163,7 +162,7 @@ add_to_backlog <- function(task = "новое задание",
                          skill = skill,
                          schedule = schedule,
                          ignore = ignore,
-                         params = params |> yaml::as.yaml())) |>
+                         params = params)) |>
         readr::write_csv(file = path_to_tasks, na = "")
     }
 

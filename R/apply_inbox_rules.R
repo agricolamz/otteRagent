@@ -200,17 +200,16 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
       }
 
       if(is.na(inbox_rules$body[i])){
-        index_subject <- TRUE
+        index_body <- TRUE
       } else {
         index_body <- stringr::str_detect(result$snippet, inbox_rules$body[i])
       }
 
       if(is.na(inbox_rules$label[i])){
-        index_subject <- TRUE
+        index_label <- TRUE
       } else {
         index_label <- stringr::str_detect(result$labels, inbox_rules$label[i])
       }
-
 
       result |>
         dplyr::slice(which(index_from & index_to & index_subject & index_body & index_label)) |>
