@@ -67,13 +67,14 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
                     from = "c",
                     to = "c",
                     subject = "c",
+                    body = "c",
                     label = "c",
                     add_labels = "c",
                     remove_labels = "c")) |>
     colnames() ->
     inbox_rules_colnames
 
-  expected_colnames <- c("id", "from", "to", "subject", "label", "add_labels", "remove_labels")
+  expected_colnames <- c("id", "from", "to", "subject", "body", "label", "add_labels", "remove_labels")
 
   absent_colnames <- expected_colnames[which(!(expected_colnames %in% inbox_rules_colnames))]
 
@@ -93,6 +94,7 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
                     from = "c",
                     to = "c",
                     subject = "c",
+                    body = "c",
                     label = "c",
                     add_labels = "c",
                     remove_labels = "c")) |>
@@ -143,6 +145,7 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
                                    from = "c",
                                    to = "c",
                                    subject = "c",
+                                   body = "c",
                                    label = "c",
                                    add_labels = "c",
                                    remove_labels = "c"))
@@ -196,15 +199,21 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
         index_subject <- stringr::str_detect(result$subject, inbox_rules$subject[i])
       }
 
+      if(is.na(inbox_rules$body[i])){
+        index_subject <- TRUE
+      } else {
+        index_body <- stringr::str_detect(result$snippet, inbox_rules$body[i])
+      }
+
       if(is.na(inbox_rules$label[i])){
         index_subject <- TRUE
       } else {
-        index_subject <- stringr::str_detect(result$labels, inbox_rules$label[i])
+        index_label <- stringr::str_detect(result$labels, inbox_rules$label[i])
       }
 
 
       result |>
-        dplyr::slice(which(index_from & index_to & index_subject)) |>
+        dplyr::slice(which(index_from & index_to & index_subject & index_body & index_label)) |>
         dplyr::mutate(add_labels = inbox_rules$add_labels[i],
                       remove_labels = inbox_rules$remove_labels[i],
                       rule_id = inbox_rules$id[i])
