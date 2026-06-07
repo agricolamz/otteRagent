@@ -8,6 +8,7 @@ sent_gmail_message(
   to = getOption("otteRagent_preferred_out_mail"),
   subject = "no subject",
   message,
+  attach_file = NULL,
   log_message = "Отправляю письмо на gmail"
 )
 }
@@ -17,6 +18,8 @@ sent_gmail_message(
 \item{subject}{value for the subject of the mail}
 
 \item{message}{value for the message of the mail formatted as markdown}
+
+\item{attach_file}{path to the file that should be attached to the mail}
 
 \item{log_message}{message for adding to logs}
 }

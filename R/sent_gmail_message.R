@@ -3,6 +3,7 @@
 #' @param to value for the receiver's mail address
 #' @param subject value for the subject of the mail
 #' @param message value for the message of the mail formatted as markdown
+#' @param attach_file path to the file that should be attached to the mail
 #' @param log_message message for adding to logs
 #'
 #' @importFrom logger log_debug
@@ -16,12 +17,14 @@
 #' @importFrom gmailr gm_text_body
 #' @importFrom gmailr gm_send_message
 #' @importFrom gmailr gm_profile
+#' @importFrom gmailr gm_attach_file
 #'
 #' @export
 
 sent_gmail_message <- function(to = getOption("otteRagent_preferred_out_mail"),
                                subject = "no subject",
                                message,
+                               attach_file = NULL,
                                log_message = "Отправляю письмо на gmail"){
 
   logger::log_debug("🦦  Запуск умения `sent_gmail_message`")
@@ -72,6 +75,15 @@ sent_gmail_message <- function(to = getOption("otteRagent_preferred_out_mail"),
     logger::log_debug("📨  OAuth client set up")
   }
 
+  if(!is.null(attach_file)){
+    if(file.exists(attach_file)){
+      logger::log_debug("📨  файл, указанный в `attach_file`, существует")
+    } else {
+      logger::log_error("📨  файла, указанного в `attach_file`, не существует")
+      stop()
+    }
+  }
+
   # начало работы функции ---------------------------------------------------
 
   logger::log_info("🦦  {log_message}")
@@ -86,7 +98,16 @@ sent_gmail_message <- function(to = getOption("otteRagent_preferred_out_mail"),
     gmailr::gm_text_body(message_body,
                          content_type = "text/html",
                          charset = "utf-8",
-                         encoding = "base64") |>
+                         encoding = "base64") ->
+    message
+
+  if(!is.null(attach_file)){
+    message |>
+      gmailr::gm_attach_file(attach_file) ->
+      message
+  }
+
+  message |>
     gmailr::gm_send_message()
 
   logger::log_debug("🦦  Завершение запуска умения `sent_gmail_message`")
