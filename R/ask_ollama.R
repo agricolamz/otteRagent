@@ -5,6 +5,7 @@
 #' @param ollama_attachment name of the pdf file that is located in the otteRagent directory in the \code{downloads} subfolder.
 #' @param remove_from_attachment vector of integers that defines which pages should be excluded from the pdf file (e.g. references and long tables).
 #' @param add_prompt logical. Indicates, whether add_prompt should be added to the email.
+#' @param gmail_subject subject of the mail. Useful, when you have multiple calls to differentiate them from each other.
 #' @param log_message message for adding to logs
 #' @param path_to_tasks path to tasks
 #'
@@ -27,6 +28,7 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
                        ollama_attachment = NA,
                        remove_from_attachment = NULL,
                        add_prompt = TRUE,
+                       gmail_subject = "Ответ модели Ollama",
                        log_message = "Делаю запрос модели Ollama",
                        path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")){
 
@@ -47,6 +49,13 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
     logger::log_debug("🦙  параметр `ollama_model` есть")
   } else {
     logger::log_error("🦙  не заполнен параметр `ollama_model`")
+    stop()
+  }
+
+  if(exists("gmail_subject")){
+    logger::log_debug("🦙  параметр `gmail_subject` есть")
+  } else {
+    logger::log_error("🦙  не заполнен параметр `gmail_subject`")
     stop()
   }
 
@@ -166,7 +175,7 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
 
   if(curl::has_internet()){
     sent_gmail_message(log_message = "Отправляю письмо с ответом Ollama",
-                       subject = "Ответ модели Ollama",
+                       subject = gmail_subject,
                        message = mail_message)
   } else {
     logger::log_warn("🦦  Нет интернет соединения, так что я не отправил ответа модели")
@@ -175,7 +184,7 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
                    schedule = "once",
                    immediate_execute = TRUE,
                    log_message = "Добавляю отправку письма с ответом модели в список задач",
-                   params = list(subject = "Ответ модели Ollama",
+                   params = list(subject = gmail_subject,
                                  message = mail_message),
                    path_to_tasks = path_to_tasks)
   }

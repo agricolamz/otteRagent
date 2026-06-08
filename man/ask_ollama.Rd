@@ -10,6 +10,7 @@ ask_ollama(
   ollama_attachment = NA,
   remove_from_attachment = NULL,
   add_prompt = TRUE,
+  gmail_subject = "Ответ модели Ollama",
   log_message = "Делаю запрос модели Ollama",
   path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")
 )
@@ -24,6 +25,8 @@ ask_ollama(
 \item{remove_from_attachment}{vector of integers that defines which pages should be excluded from the pdf file (e.g. references and long tables).}
 
 \item{add_prompt}{logical. Indicates, whether add_prompt should be added to the email.}
+
+\item{gmail_subject}{subject of the mail. Useful, when you have multiple calls to differentiate them from each other.}
 
 \item{log_message}{message for adding to logs}
 
