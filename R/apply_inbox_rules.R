@@ -154,8 +154,6 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
     stringr::str_c("logs/inbox_rules_logs.csv") ->
     inbox_rules_logs
 
-  my_threads <- gmailr::gm_threads(search = "is:unread")
-
   seq(1, length(my_threads[[1]]$threads)) |>
     purrr::map(function(i){
 

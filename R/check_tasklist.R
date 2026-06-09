@@ -12,6 +12,7 @@
 #' @importFrom dplyr filter
 #' @importFrom dplyr n
 #' @importFrom dplyr if_else
+#' @importFrom readr read_csv
 #' @importFrom purrr walk
 #'
 #' @export
@@ -95,7 +96,7 @@ check_tasklist <- function(path_to_tasks = stringr::str_c(getOption("otteRagent_
       readr::write_csv(file = path_to_tasks, na = "")
 
     path_to_tasks |>
-      dplyr::read_csv(show_col_types = FALSE,
+      readr::read_csv(show_col_types = FALSE,
                       progress = FALSE) |>
       dplyr::filter(is.na(ignore)) ->
       tasks

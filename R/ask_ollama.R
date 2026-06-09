@@ -11,6 +11,7 @@
 #'
 #' @importFrom logger log_debug
 #' @importFrom logger log_error
+#' @importFrom logger log_info
 #' @importFrom utils installed.packages
 #' @importFrom ollamar test_connection
 #' @importFrom ollamar model_avail
