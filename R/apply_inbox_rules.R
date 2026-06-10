@@ -42,8 +42,6 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
 
   logger::log_debug("📨  проверка параметров")
 
-  "report_inbox_logs"
-
   if(exists("inbox_rules_path")){
     logger::log_debug("📨  параметр `inbox_rules_path` есть")
   } else {
@@ -153,6 +151,8 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
   getOption("otteRagent_directory") |>
     stringr::str_c("logs/inbox_rules_logs.csv") ->
     inbox_rules_logs
+
+  my_threads <- gmailr::gm_threads(search = "is:unread")
 
   seq(1, length(my_threads[[1]]$threads)) |>
     purrr::map(function(i){
