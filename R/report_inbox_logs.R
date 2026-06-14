@@ -7,7 +7,12 @@
 #' @importFrom logger log_info
 #' @importFrom logger log_error
 #' @importFrom stringr str_c
+#' @importFrom stringr str_glue_data
 #' @importFrom purrr map_lgl
+#' @importFrom readr read_csv
+#' @importFrom readr write_csv
+#' @importFrom dplyr filter
+#' @importFrom dplyr mutate
 #'
 #' @export
 
@@ -109,21 +114,21 @@ Removed labels: {remove_labels}
 - {subject}
 - {snippet}
 ") |>
-      str_c(collapse = "\n\n") ->
+      stringr::str_c(collapse = "\n\n") ->
       message
 
     add_to_backlog(task = "Отправить письмо с логами изменений в почте",
                    skill = "sent_gmail_message",
                    schedule = "once",
                    immediate_execute = TRUE,
-                   log_message = "Добавляю отправку письма логами изменений в почте в список задач",
+                   log_message = "Добавляю отправку письма с логами изменений в почте в список задач",
                    params = list(subject = "Логи изменений в почте",
                                  message = message),
                    path_to_tasks = path_to_tasks)
 
     inbox_logs |>
       dplyr::mutate(reported = TRUE) |>
-      write_csv(inbox_rules_logs, na = "")
+      readr::write_csv(inbox_rules_logs, na = "")
 
   } else {
     logger::log_info("📨  Все логи уже зарепорчены.")
