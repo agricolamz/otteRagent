@@ -19,6 +19,7 @@
 #' @importFrom readr write_csv
 #' @importFrom dplyr anti_join
 #' @importFrom dplyr bind_rows
+#' @importFrom curl has_internet
 #'
 #' @export
 
@@ -40,6 +41,34 @@ monitor_website_element <- function(url,
     stop()
   }
 
+  if(exists("url")){
+    logger::log_debug("🌐  параметр `url` есть")
+  } else {
+    logger::log_error("🌐  нет параметра `url`")
+    stop()
+  }
+
+  if(exists("website_element")){
+    logger::log_debug("🌐  параметр `website_element` есть")
+  } else {
+    logger::log_error("🌐  нет параметра `website_element`")
+    stop()
+  }
+
+  if(exists("log_message")){
+    logger::log_debug("🌐  параметр `log_message` есть")
+  } else {
+    logger::log_error("🌐  нет параметра `log_message`")
+    stop()
+  }
+
+  if(exists("path_to_tasks")){
+    logger::log_debug("🌐  параметр `path_to_tasks` есть")
+  } else {
+    logger::log_error("🌐  нет параметра `path_to_tasks`")
+    stop()
+  }
+
   # начало работы функции ---------------------------------------------------
 
   logger::log_info("🌐  {log_message}")
@@ -47,15 +76,6 @@ monitor_website_element <- function(url,
   getOption("otteRagent_directory") |>
     stringr::str_c("logs/website_monitoring_logs.csv") ->
     website_monitoring_logs_path
-
-  rvest::read_html(url) |>
-    rvest::html_elements(website_element) ->
-    h2
-
-  tibble::tibble(title = h2 |> rvest::html_text() |> stringr::str_squish(),
-                 link = h2 |> rvest::html_attr("href"),
-                 website_element = website_element) ->
-    website_monitoring_results
 
   if(file.exists(website_monitoring_logs_path)){
     website_monitoring_logs_path |>
@@ -73,37 +93,50 @@ monitor_website_element <- function(url,
       website_monitoring_logs
   }
 
-  website_monitoring_results |>
-    dplyr::anti_join(website_monitoring_logs) ->
-    detected_changes
+  if(curl::has_internet()){
+    rvest::read_html(url) |>
+      rvest::html_elements(website_element) ->
+      h2
 
-  if(nrow(detected_changes) > 0){
+    tibble::tibble(title = h2 |> rvest::html_text() |> stringr::str_squish(),
+                   link = h2 |> rvest::html_attr("href"),
+                   website_element = website_element) ->
+      website_monitoring_results
 
-    detected_changes |>
-      stringr::str_glue_data("
+    website_monitoring_results |>
+      dplyr::anti_join(website_monitoring_logs) ->
+      detected_changes
+
+    if(nrow(detected_changes) > 0){
+
+      detected_changes |>
+        stringr::str_glue_data("
 ---
 
 - {title}
 - {link}
 ") |>
-      stringr::str_c(collapse = "\n\n") ->
-      message
+        stringr::str_c(collapse = "\n\n") ->
+        message
 
-    add_to_backlog(task = "Отправить письмо с результатами мониторинга сайта",
-                   skill = "sent_gmail_message",
-                   schedule = "once",
-                   immediate_execute = TRUE,
-                   log_message = "Добавляю отправку письма с изменениями на странице в список задач",
-                   params = list(subject = "Обнаружены изменения на сайте",
-                                 message = message),
-                   path_to_tasks = path_to_tasks)
+      add_to_backlog(task = "Отправить письмо с результатами мониторинга сайта",
+                     skill = "sent_gmail_message",
+                     schedule = "once",
+                     immediate_execute = TRUE,
+                     log_message = "Добавляю отправку письма с изменениями на странице в список задач",
+                     params = list(subject = "Обнаружены изменения на сайте",
+                                   message = message),
+                     path_to_tasks = path_to_tasks)
 
-    website_monitoring_logs |>
-      dplyr::bind_rows(detected_changes) |>
-      readr::write_csv(website_monitoring_logs_path, na = "")
+      website_monitoring_logs |>
+        dplyr::bind_rows(detected_changes) |>
+        readr::write_csv(website_monitoring_logs_path, na = "")
 
+    } else {
+      logger::log_info("🌐  Изменений на сайте {url} не найдено.")
+    }
   } else {
-    logger::log_info("🌐  Изменений на сайте {url} не найдено.")
+    logger::log_info("🌐  Нет интернет соединения")
   }
 
   logger::log_debug("🌐  Завершение запуска умения `monitor_website_element`")

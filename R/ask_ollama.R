@@ -21,6 +21,7 @@
 #' @importFrom stringr str_c
 #' @importFrom pdftools pdf_info
 #' @importFrom pdftools pdf_ocr_text
+#' @importFrom curl has_internet
 #'
 #' @export
 

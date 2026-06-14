@@ -22,6 +22,7 @@
 #' @importFrom audio.whisper whisper
 #' @importFrom tools file_ext
 #' @importFrom readr read_csv
+#' @importFrom curl has_internet
 #'
 #' @export
 
