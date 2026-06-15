@@ -2,6 +2,8 @@
 #'
 #' @param url url
 #' @param website_element css path, e. g. "h2 > a"
+#' @param link logical. Whether to add contents of the \code{href} attribute of the element.
+#' @param chromote logical. Whether to use \code{read_html_live()} or \code{read_html()} function from the \code{rvest}.
 #' @param log_message message for adding to logs
 #' @param path_to_tasks path to tasks
 #'
@@ -9,6 +11,7 @@
 #' @importFrom logger log_info
 #' @importFrom logger log_error
 #' @importFrom rvest read_html
+#' @importFrom rvest read_html_live
 #' @importFrom rvest html_elements
 #' @importFrom rvest html_text
 #' @importFrom rvest html_attr
@@ -19,12 +22,15 @@
 #' @importFrom readr write_csv
 #' @importFrom dplyr anti_join
 #' @importFrom dplyr bind_rows
+#' @importFrom dplyr mutate
 #' @importFrom curl has_internet
 #'
 #' @export
 
 monitor_website_element <- function(url,
                                     website_element = "h2 > a",
+                                    link = TRUE,
+                                    chromote = FALSE,
                                     log_message = stringr::str_glue("Ищу изменения на вебсайте: {url}"),
                                     path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")){
 
@@ -94,30 +100,53 @@ monitor_website_element <- function(url,
   }
 
   if(curl::has_internet()){
-    rvest::read_html(url) |>
-      rvest::html_elements(website_element) ->
-      h2
 
-    tibble::tibble(title = h2 |> rvest::html_text() |> stringr::str_squish(),
-                   link = h2 |> rvest::html_attr("href"),
+    if(chromote){
+      rvest::read_html_live(url) |>
+        rvest::html_elements(website_element) ->
+        website_nodes
+    } else {
+      rvest::read_html(url) |>
+        rvest::html_elements(website_element) ->
+        website_nodes
+    }
+
+    tibble::tibble(title = website_nodes |> rvest::html_text() |> stringr::str_squish(),
+                   link = website_nodes |> rvest::html_attr("href"),
                    website_element = website_element) ->
       website_monitoring_results
+
+    if(link){
+      website_monitoring_results |>
+        dplyr::mutate(link = website_nodes |> rvest::html_attr("href")) ->
+        website_monitoring_results
+    }
 
     website_monitoring_results |>
       dplyr::anti_join(website_monitoring_logs) ->
       detected_changes
 
     if(nrow(detected_changes) > 0){
-
-      detected_changes |>
-        stringr::str_glue_data("
+      if(link){
+        detected_changes |>
+          stringr::str_glue_data("
 ---
 
 - {title}
 - {link}
 ") |>
-        stringr::str_c(collapse = "\n\n") ->
-        message
+          stringr::str_c(collapse = "\n\n") ->
+          message
+      } else {
+        detected_changes |>
+          stringr::str_glue_data("
+---
+
+- {title}
+") |>
+          stringr::str_c(collapse = "\n\n") ->
+          message
+      }
 
       add_to_backlog(task = "Отправить письмо с результатами мониторинга сайта",
                      skill = "sent_gmail_message",

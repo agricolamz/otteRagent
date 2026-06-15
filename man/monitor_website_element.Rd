@@ -7,6 +7,8 @@
 monitor_website_element(
   url,
   website_element = "h2 > a",
+  link = TRUE,
+  chromote = FALSE,
   log_message =
     stringr::str_glue("Ищу изменения на вебсайте: {url}"),
   path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")
@@ -16,6 +18,10 @@ monitor_website_element(
 \item{url}{url}
 
 \item{website_element}{css path, e. g. "h2 > a"}
+
+\item{link}{logical. Whether to add contents of the \code{href} attribute of the element.}
+
+\item{chromote}{logical. Whether to use \code{read_html_live()} or \code{read_html()} function from the \code{rvest}.}
 
 \item{log_message}{message for adding to logs}
 
