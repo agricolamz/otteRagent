@@ -125,7 +125,8 @@ monitor_website_element <- function(url,
     }
 
     website_monitoring_results |>
-      dplyr::anti_join(website_monitoring_logs) ->
+      dplyr::anti_join(website_monitoring_logs,
+                       by = c("title", "link", "website_element")) ->
       detected_changes
 
     if(nrow(detected_changes) > 0){
