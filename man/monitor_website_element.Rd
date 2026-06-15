@@ -9,6 +9,7 @@ monitor_website_element(
   website_element = "h2 > a",
   link = TRUE,
   chromote = FALSE,
+  gmail_subject = "Обнаружены изменения на сайте",
   log_message =
     stringr::str_glue("Ищу изменения на вебсайте: {url}"),
   path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")
@@ -22,6 +23,8 @@ monitor_website_element(
 \item{link}{logical. Whether to add contents of the \code{href} attribute of the element.}
 
 \item{chromote}{logical. Whether to use \code{read_html_live()} or \code{read_html()} function from the \code{rvest}.}
+
+\item{gmail_subject}{subject of the mail. Useful, when you have multiple calls to differentiate them from each other.}
 
 \item{log_message}{message for adding to logs}
 
