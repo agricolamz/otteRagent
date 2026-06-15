@@ -42,7 +42,7 @@ gm_modify_thread_fixed <- function (id,
   }
 
   body <- gmailr_rename(add_labels = add_labels, remove_labels = remove_labels)
-  req <- httr::POST(gmailr:::gmail_path(gmailr_rename(user_id), "threads", id, "modify"),
+  req <- httr |> ::POST(gmailr:::gmail_path(gmailr_rename(user_id), "threads", id, "modify"),
                     body = body, encode = "json", gmailr::gm_token())
   httr::stop_for_status(req)
   invisible(httr::content(req, "parsed"))
