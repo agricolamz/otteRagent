@@ -4,6 +4,7 @@
 #' @param website_element css path, e. g. "h2 > a"
 #' @param link logical. Whether to add contents of the \code{href} attribute of the element.
 #' @param chromote logical. Whether to use \code{read_html_live()} or \code{read_html()} function from the \code{rvest}.
+#' @param gmail_subject subject of the mail. Useful, when you have multiple calls to differentiate them from each other.
 #' @param log_message message for adding to logs
 #' @param path_to_tasks path to tasks
 #'
@@ -31,6 +32,7 @@ monitor_website_element <- function(url,
                                     website_element = "h2 > a",
                                     link = TRUE,
                                     chromote = FALSE,
+                                    gmail_subject = "Обнаружены изменения на сайте",
                                     log_message = stringr::str_glue("Ищу изменения на вебсайте: {url}"),
                                     path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")){
 
@@ -153,7 +155,7 @@ monitor_website_element <- function(url,
                      schedule = "once",
                      immediate_execute = TRUE,
                      log_message = "Добавляю отправку письма с изменениями на странице в список задач",
-                     params = list(subject = "Обнаружены изменения на сайте",
+                     params = list(subject = gmail_subject,
                                    message = message),
                      path_to_tasks = path_to_tasks)
 
