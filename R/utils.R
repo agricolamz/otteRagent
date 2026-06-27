@@ -42,8 +42,23 @@ gm_modify_thread_fixed <- function (id,
   }
 
   body <- gmailr_rename(add_labels = add_labels, remove_labels = remove_labels)
-  req <- httr |> ::POST(gmailr:::gmail_path(gmailr_rename(user_id), "threads", id, "modify"),
+  req <- httr::POST(gmailr:::gmail_path(gmailr_rename(user_id), "threads", id, "modify"),
                     body = body, encode = "json", gmailr::gm_token())
   httr::stop_for_status(req)
   invisible(httr::content(req, "parsed"))
+}
+
+
+gather_context_length_of_the_ollama_model <- function(model){
+  model_params <- ollamar::show(model)$model_info
+
+  model_params[which(names(model_params) %in% stringr::str_subset(names(model_params), "context_length"))] |>
+    unlist() |>
+    unname()
+}
+
+vector_splits <- function(m, n) {
+  sizes <- rep(m %/% n, n)
+  sizes[n] <- sizes[n] + m %% n
+  cumsum(sizes)
 }

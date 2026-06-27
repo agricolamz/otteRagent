@@ -1,7 +1,10 @@
-#' Post a messages to Ollama and send the result via `gmail`
+#' Run Ollama task
+#'
+#' Post a messages to ollama, check whether they will fit the model's context length the and send the result via `gmail`.
 #'
 #' @param ollama_model Specifies an Ollama model to call.
 #' @param ollama_message Text of the add_prompt.
+#' @param ollama_system_prompt Text that passes as system prompt. Usefull when you have attachment
 #' @param ollama_attachment name of the pdf file that is located in the otteRagent directory in the \code{downloads} subfolder.
 #' @param remove_from_attachment vector of integers that defines which pages should be excluded from the pdf file (e.g. references and long tables).
 #' @param add_prompt logical. Indicates, whether add_prompt should be added to the email.
@@ -16,17 +19,22 @@
 #' @importFrom ollamar test_connection
 #' @importFrom ollamar model_avail
 #' @importFrom purrr map_lgl
+#' @importFrom purrr map_chr
 #' @importFrom purrr pluck
 #' @importFrom stringr str_glue
 #' @importFrom stringr str_c
+#' @importFrom stringr str_remove
 #' @importFrom pdftools pdf_info
 #' @importFrom pdftools pdf_ocr_text
 #' @importFrom curl has_internet
+#' @importFrom tokenizers count_words
+#' @importFrom tokenizers tokenize_sentences
 #'
 #' @export
 
-ask_ollama <- function(ollama_model = "gemma4:26b",
-                       ollama_message,
+ask_ollama <- function(ollama_message,
+                       ollama_model = "gemma4:latest",
+                       ollama_system_prompt = "",
                        ollama_attachment = NA,
                        remove_from_attachment = NULL,
                        add_prompt = TRUE,
@@ -158,19 +166,43 @@ ask_ollama <- function(ollama_model = "gemma4:26b",
     getOption("otteRagent_directory") |>
       stringr::str_c("downloads/", ollama_attachment) |>
       pdftools::pdf_ocr_text(pages = pages) |>
-      stringr::str_c(collapse = "\n\n") ->
+      stringr::str_c(collapse = "\n\n") |>
+      stringr::str_remove("(?<=\\S)-\\s{1,}") ->
       ollama_message
   }
 
-  ollama_message |>
-    ollamar::generate(model = ollama_model) |>
-    ollamar::resp_process("text") ->
+  stringr::str_c(ollama_system_prompt, ollama_message) |>
+    tokenizers::count_words() ->
+    n_words
+
+  context_length <- gather_context_length_of_the_ollama_model(ollama_model)
+
+  # lets say that the 1 token correspond for every 3/4 of a word then
+  # prompt is (n_words / 0.7) and in case of translation output will be (n_words / 0.7)
+  # so the context_length should be bigger (n_words / 0.75) * 2
+
+  n_parts <- ceiling(((n_words / 0.7) * 2)/context_length)
+
+  sentences <- tokenizers::tokenize_sentences(ollama_message)[[1]]
+
+  splits <- vector_splits(length(sentences), n_parts)
+
+  seq_along(splits) |>
+    purrr::map_chr(function(i){
+      ids <- c(0, splits)
+      sentences[(ids[i]+1):ids[i+1]] |>
+        stringr::str_c(colapse = " ") |>
+        ollamar::generate(model = ollama_model,
+                          system = ollama_system_prompt) |>
+        ollamar::resp_process("text")
+    }) |>
+    stringr::str_c(collapse = "\n\n") ->
     result
 
   if(add_prompt){
     mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}\n\n---\n\n### Промпт\n\n{ollama_message}")
   } else {
-    mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}\n\n")
+    mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}")
   }
 
   # отправка результата на почту --------------------------------------------

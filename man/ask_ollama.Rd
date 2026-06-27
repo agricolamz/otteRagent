@@ -2,11 +2,12 @@
 % Please edit documentation in R/ask_ollama.R
 \name{ask_ollama}
 \alias{ask_ollama}
-\title{Post a messages to Ollama and send the result via `gmail`}
+\title{Run Ollama task}
 \usage{
 ask_ollama(
-  ollama_model = "gemma4:26b",
   ollama_message,
+  ollama_model = "gemma4:latest",
+  ollama_system_prompt = "",
   ollama_attachment = NA,
   remove_from_attachment = NULL,
   add_prompt = TRUE,
@@ -16,9 +17,11 @@ ask_ollama(
 )
 }
 \arguments{
+\item{ollama_message}{Text of the add_prompt.}
+
 \item{ollama_model}{Specifies an Ollama model to call.}
 
-\item{ollama_message}{Text of the add_prompt.}
+\item{ollama_system_prompt}{Text that passes as system prompt. Usefull when you have attachment}
 
 \item{ollama_attachment}{name of the pdf file that is located in the otteRagent directory in the \code{downloads} subfolder.}
 
@@ -33,5 +36,5 @@ ask_ollama(
 \item{path_to_tasks}{path to tasks}
 }
 \description{
-Post a messages to Ollama and send the result via `gmail`
+Post a messages to ollama, check whether they will fit the model's context length the and send the result via `gmail`.
 }
