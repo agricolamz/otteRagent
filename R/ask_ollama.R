@@ -8,6 +8,7 @@
 #' @param ollama_attachment name of the pdf file that is located in the otteRagent directory in the \code{downloads} subfolder.
 #' @param remove_from_attachment vector of integers that defines which pages should be excluded from the pdf file (e.g. references and long tables).
 #' @param add_prompt logical. Indicates, whether add_prompt should be added to the email.
+#' @param result_delivery whether attach result as a \code{file} or as a raw \code{text}.
 #' @param gmail_subject subject of the mail. Useful, when you have multiple calls to differentiate them from each other.
 #' @param log_message message for adding to logs
 #' @param path_to_tasks path to tasks
@@ -19,6 +20,7 @@
 #' @importFrom ollamar test_connection
 #' @importFrom ollamar model_avail
 #' @importFrom purrr map_lgl
+#' @importFrom readr write_lines
 #' @importFrom purrr map_chr
 #' @importFrom purrr pluck
 #' @importFrom stringr str_glue
@@ -38,8 +40,9 @@ ask_ollama <- function(ollama_message,
                        ollama_attachment = NA,
                        remove_from_attachment = NULL,
                        add_prompt = TRUE,
+                       result_delivery = "text",
                        gmail_subject = "Ответ модели Ollama",
-                       log_message = "Делаю запрос модели Ollama",
+                       log_message = "Начинаю подготовку к запросу модели Ollama",
                        path_to_tasks = stringr::str_c(getOption("otteRagent_directory"), "tasks.csv")){
 
   logger::log_debug("🦦  Запуск умения `ask_ollama`")
@@ -138,6 +141,14 @@ ask_ollama <- function(ollama_message,
     }
   }
 
+  if(exists("result_delivery")){
+    if(result_delivery %in% c("text", "file")){
+      logger::log_debug("🦙  параметр `result_delivery` существует")
+    } else {
+      logger::log_error("🦙  параметр `result_delivery` может быть либо `text`, либо `file`.")
+      stop()
+    }
+  }
 
   # вызов функции -----------------------------------------------------------
   logger::log_info("🦙  {log_message}")
@@ -149,10 +160,10 @@ ask_ollama <- function(ollama_message,
     stringr::str_c(getOption("otteRagent_directory"),
                    "downloads/",
                    ollama_attachment) |>
-    pdftools::pdf_info() |>
-    purrr::pluck("pages") |>
-    seq_len() ->
-    pages
+      pdftools::pdf_info() |>
+      purrr::pluck("pages") |>
+      seq_len() ->
+      pages
 
     if(length(remove_from_attachment) > 0){
       if(is.character(remove_from_attachment)){
@@ -168,10 +179,12 @@ ask_ollama <- function(ollama_message,
       pdftools::pdf_ocr_text(pages = pages) |>
       stringr::str_c(collapse = "\n\n") |>
       stringr::str_remove("(?<=\\S)-\\s{1,}") ->
-      ollama_message
+      add_to_ollama_message
+  } else {
+    add_to_ollama_message <- ""
   }
 
-  stringr::str_c(ollama_system_prompt, ollama_message) |>
+  stringr::str_c(ollama_message, add_to_ollama_message) |>
     tokenizers::count_words() ->
     n_words
 
@@ -183,15 +196,18 @@ ask_ollama <- function(ollama_message,
 
   n_parts <- ceiling(((n_words / 0.7) * 2)/context_length)
 
-  sentences <- tokenizers::tokenize_sentences(ollama_message)[[1]]
+  sentences <- tokenizers::tokenize_sentences(add_to_ollama_message)[[1]]
 
   splits <- vector_splits(length(sentences), n_parts)
+
+  logger::log_info("🦙  Делаю запрос")
 
   seq_along(splits) |>
     purrr::map_chr(function(i){
       ids <- c(0, splits)
       sentences[(ids[i]+1):ids[i+1]] |>
-        stringr::str_c(colapse = " ") |>
+        stringr::str_c(collapse = " ") |>
+        stringr::str_c(ollama_message, ... = _) |>
         ollamar::generate(model = ollama_model,
                           system = ollama_system_prompt) |>
         ollamar::resp_process("text")
@@ -199,28 +215,62 @@ ask_ollama <- function(ollama_message,
     stringr::str_c(collapse = "\n\n") ->
     result
 
-  if(add_prompt){
-    mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}\n\n---\n\n### Промпт\n\n{ollama_message}")
-  } else {
-    mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}")
+  print(nchar(result))
+
+  if(result_delivery == "text"){
+    if(add_prompt){
+      mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}\n\n---\n\n### Промпт\n\n{ollama_message}")
+    } else {
+      mail_message <- stringr::str_glue("Вот ответ модели:\n\n{result}")
+    }
+  } else if(result_delivery == "file"){
+
+    getOption("otteRagent_directory") |>
+      stringr::str_c("uploads/", ollama_attachment, ".txt") ->
+      file_name
+
+    logger::log_info("🦙  Записываю результат в {file_name}")
+
+    readr::write_lines(file = file_name, x = result)
   }
 
   # отправка результата на почту --------------------------------------------
 
   if(curl::has_internet()){
-    sent_gmail_message(log_message = "Отправляю письмо с ответом Ollama",
-                       subject = gmail_subject,
-                       message = mail_message)
+    if(result_delivery == "text"){
+      sent_gmail_message(log_message = "Отправляю письмо с ответом Ollama",
+                         subject = gmail_subject,
+                         message = mail_message)
+    } else if(result_delivery == "file"){
+      sent_gmail_message(log_message = "Отправляю письмо с ответом Ollama",
+                         subject = gmail_subject,
+                         message = "Вот ответ модели.",
+                         attach_file = file_name)
+    }
   } else {
     logger::log_warn("🦦  Нет интернет соединения, так что я не отправил ответа модели")
-    add_to_backlog(task = "Отправить письмо с ответом модели",
-                   skill = "sent_gmail_message",
-                   schedule = "once",
-                   immediate_execute = TRUE,
-                   log_message = "Добавляю отправку письма с ответом модели в список задач",
-                   params = list(subject = gmail_subject,
-                                 message = mail_message),
-                   path_to_tasks = path_to_tasks)
+
+    if(result_delivery == "text"){
+      add_to_backlog(task = "Отправить письмо с ответом модели",
+                     skill = "sent_gmail_message",
+                     schedule = "once",
+                     immediate_execute = TRUE,
+                     log_message = "Добавляю отправку письма с ответом модели в список задач",
+                     params = list(subject = gmail_subject,
+                                   message = mail_message),
+                     path_to_tasks = path_to_tasks)
+    } else if(result_delivery == "file"){
+
+      add_to_backlog(task = "Отправить письмо с ответом модели",
+                     skill = "sent_gmail_message",
+                     schedule = "once",
+                     immediate_execute = TRUE,
+                     log_message = "Добавляю отправку письма с ответом модели в список задач",
+                     params = list(subject = gmail_subject,
+                                   message = "Вот ответ модели.",
+                                   attach_file = file_name),
+                     path_to_tasks = path_to_tasks)
+    }
   }
 
   logger::log_debug("🦦  Завершение запуска умения `ask_ollama`")
