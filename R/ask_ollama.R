@@ -35,7 +35,7 @@
 #' @export
 
 ask_ollama <- function(ollama_message,
-                       ollama_model = "gemma4:latest",
+                       ollama_model = "gemma4:26b",
                        ollama_system_prompt = "",
                        ollama_attachment = NA,
                        remove_from_attachment = NULL,
