@@ -182,6 +182,7 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
         index_from <- TRUE
       } else {
         index_from <- stringr::str_detect(result$from, inbox_rules$from[i])
+        index_from <- ifelse(is.na(index_from), TRUE, index_from)
       }
 
       if(is.na(inbox_rules$to[i])){
@@ -195,18 +196,21 @@ apply_inbox_rules <- function(inbox_rules_path = stringr::str_c(getOption("otteR
         index_subject <- TRUE
       } else {
         index_subject <- stringr::str_detect(result$subject, inbox_rules$subject[i])
+        index_subject <- ifelse(is.na(index_subject), TRUE, index_subject)
       }
 
       if(is.na(inbox_rules$body[i])){
         index_body <- TRUE
       } else {
         index_body <- stringr::str_detect(result$snippet, inbox_rules$body[i])
+        index_body <- ifelse(is.na(index_body), TRUE, index_body)
       }
 
       if(is.na(inbox_rules$label[i])){
         index_label <- TRUE
       } else {
         index_label <- stringr::str_detect(result$labels, inbox_rules$label[i])
+        index_label <- ifelse(is.na(index_label), TRUE, index_label)
       }
 
       result |>
